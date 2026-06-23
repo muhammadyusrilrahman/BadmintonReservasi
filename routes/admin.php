@@ -47,6 +47,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::post('refunds/{refund}/reject', [\App\Http\Controllers\Admin\RefundController::class, 'reject'])->name('refunds.reject');
         Route::post('refunds/{refund}/complete', [\App\Http\Controllers\Admin\RefundController::class, 'complete'])->name('refunds.complete');
 
+        // Kelola Promo
+        Route::resource('promos', \App\Http\Controllers\Admin\PromoCodeController::class);
+        Route::post('promos/{promo}/toggle-active', [\App\Http\Controllers\Admin\PromoCodeController::class, 'toggleActive'])->name('promos.toggle-active');
+
         // Activity Logs
         Route::get('activity-logs', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
 
@@ -57,4 +61,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/export/excel', [\App\Http\Controllers\Admin\ReportController::class, 'exportExcel'])->name('reports.export.excel');
         Route::get('reports/export/pdf', [\App\Http\Controllers\Admin\ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+
+        // Broadcast Maintenance
+        Route::get('broadcast-maintenance', [\App\Http\Controllers\Admin\BroadcastMaintenanceController::class, 'index'])->name('broadcast-maintenance.index');
+        Route::get('broadcast-maintenance/create', [\App\Http\Controllers\Admin\BroadcastMaintenanceController::class, 'create'])->name('broadcast-maintenance.create');
+        Route::post('broadcast-maintenance', [\App\Http\Controllers\Admin\BroadcastMaintenanceController::class, 'store'])->name('broadcast-maintenance.store');
     });
+

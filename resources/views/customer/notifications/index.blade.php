@@ -31,6 +31,7 @@
                             'refund_approved' => ['bg-amber-100 text-amber-655 dark:bg-amber-950/50 dark:text-amber-400', '💰'],
                             'reschedule_approved' => ['bg-violet-100 text-violet-655 dark:bg-violet-950/50 dark:text-violet-400', '🕒'],
                             'schedule_changed' => ['bg-pink-100 text-pink-655 dark:bg-pink-950/50 dark:text-pink-400', '⚠️'],
+                            'maintenance' => ['bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400', '🛠️'],
                         ];
                         $colors = $iconMap[$type] ?? ['bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400', '🔔'];
                     @endphp

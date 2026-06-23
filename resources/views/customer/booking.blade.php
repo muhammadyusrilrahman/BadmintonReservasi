@@ -209,10 +209,48 @@
                                 <span class="text-xs text-slate-500 dark:text-slate-400">Total slot</span>
                                 <span class="text-xs font-medium text-slate-800 dark:text-white" x-text="totalSlots + ' slot'"></span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-semibold text-slate-800 dark:text-white">Total</span>
-                                <span class="text-lg font-extrabold text-slate-800 dark:text-white" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(totalPrice)"></span>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs text-slate-500 dark:text-slate-400">Subtotal</span>
+                                <span class="text-xs font-medium text-slate-800 dark:text-white" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(totalPrice)"></span>
                             </div>
+
+                            {{-- Promo Discount Row --}}
+                            <div x-show="promoApplied" x-transition class="flex items-center justify-between mb-1">
+                                <span class="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                    Diskon (<span x-text="appliedPromoCode"></span>)
+                                </span>
+                                <span class="text-xs font-medium text-emerald-600 dark:text-emerald-400" x-text="'- Rp ' + new Intl.NumberFormat('id-ID').format(promoDiscount)"></span>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
+                                <span class="text-sm font-semibold text-slate-800 dark:text-white">Total Bayar</span>
+                                <span class="text-lg font-extrabold" :class="promoApplied ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-white'" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(finalPrice)"></span>
+                            </div>
+                        </div>
+
+                        {{-- Promo Code Input --}}
+                        <div class="pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Kode Promo</label>
+                            <div class="flex gap-2">
+                                <input type="text" x-model="promoCodeInput" :disabled="promoApplied"
+                                       placeholder="Masukkan kode promo"
+                                       @keydown.enter.prevent="applyPromo()"
+                                       class="flex-1 px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition uppercase"
+                                       style="text-transform: uppercase;">
+                                <button type="button" x-show="!promoApplied" @click="applyPromo()" :disabled="!promoCodeInput || promoLoading"
+                                        class="px-3 py-2 text-xs font-semibold bg-[#1e3a5f] text-white rounded-lg hover:bg-[#162d4a] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                                    <span x-show="!promoLoading">Terapkan</span>
+                                    <svg x-show="promoLoading" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                </button>
+                                <button type="button" x-show="promoApplied" @click="removePromo()"
+                                        class="px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-500/10 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                                    Hapus
+                                </button>
+                            </div>
+                            <p x-show="promoMessage" x-transition
+                               class="text-xs mt-1.5" :class="promoApplied ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'"
+                               x-text="promoMessage"></p>
                         </div>
 
                         {{-- Submit --}}
@@ -221,6 +259,8 @@
                             <input type="hidden" name="court_id" :value="selectedCourtId">
                             <input type="hidden" name="payment_method" :value="paymentMethod">
                             <input type="hidden" name="notes" :value="notes">
+                            <input type="hidden" name="promo_code" :value="promoApplied ? appliedPromoCode : ''">
+
                             <template x-for="(entry, ei) in dateEntries.filter(e => e.selectedSlots.length > 0)" :key="'f-' + entry.date">
                                 <div>
                                     <input type="hidden" :name="'bookings[' + ei + '][date]'" :value="entry.date">
@@ -230,7 +270,7 @@
                                 </div>
                             </template>
                             <button type="button"
-                                    @click="$dispatch('open-global-confirm', { formId: 'booking-form', message: 'Konfirmasi pemesanan ' + totalSlots + ' slot di ' + dateEntries.filter(e => e.selectedSlots.length > 0).length + ' hari dengan total Rp ' + new Intl.NumberFormat('id-ID').format(totalPrice) + '?' })"
+                                    @click="$dispatch('open-global-confirm', { formId: 'booking-form', message: 'Konfirmasi pemesanan ' + totalSlots + ' slot di ' + dateEntries.filter(e => e.selectedSlots.length > 0).length + ' hari dengan total Rp ' + new Intl.NumberFormat('id-ID').format(finalPrice) + '?' + (promoApplied ? '\nPromo: ' + appliedPromoCode : '') })"
                                     class="w-full mt-2 px-6 py-3 bg-gradient-to-r from-[#1e3a5f] to-[#e91e8c] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-pink-500/25 hover:-translate-y-0.5 transition-all duration-200">
                                 Pesan Sekarang
                             </button>
@@ -253,6 +293,14 @@
                 paymentMethod: 'transfer',
                 notes: '',
 
+                // Promo state
+                promoCodeInput: '',
+                promoApplied: false,
+                appliedPromoCode: '',
+                promoDiscount: 0,
+                promoMessage: '',
+                promoLoading: false,
+
                 get totalSlots() {
                     return this.dateEntries.reduce((sum, e) => sum + e.selectedSlots.length, 0);
                 },
@@ -263,6 +311,10 @@
                     , 0);
                 },
 
+                get finalPrice() {
+                    return Math.max(0, this.totalPrice - this.promoDiscount);
+                },
+
                 formatDate(dateStr) {
                     const d = new Date(dateStr + 'T00:00:00');
                     return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -271,6 +323,7 @@
                 selectCourt(id, name) {
                     this.selectedCourtId = id;
                     this.selectedCourtName = name;
+                    this.removePromo(); // Reset promo when court changes
                     // Re-fetch slots for all existing dates
                     this.dateEntries.forEach(entry => this.fetchSlotsForEntry(entry));
                 },
@@ -297,6 +350,10 @@
 
                 removeDate(idx) {
                     this.dateEntries.splice(idx, 1);
+                    // Recalculate promo if applied
+                    if (this.promoApplied) {
+                        this.revalidatePromo();
+                    }
                 },
 
                 async fetchSlotsForEntry(entry) {
@@ -326,10 +383,99 @@
                     } else {
                         entry.selectedSlots.push({ ...slot });
                     }
+                    // Recalculate promo discount when slots change
+                    if (this.promoApplied) {
+                        this.revalidatePromo();
+                    }
                 },
 
                 isSlotSelected(entry, slotId) {
                     return entry.selectedSlots.some(s => s.id === slotId);
+                },
+
+                // Promo methods
+                async applyPromo() {
+                    if (!this.promoCodeInput || this.promoLoading) return;
+                    if (this.totalPrice <= 0) {
+                        this.promoMessage = 'Pilih slot terlebih dahulu sebelum menerapkan promo.';
+                        return;
+                    }
+
+                    this.promoLoading = true;
+                    this.promoMessage = '';
+
+                    try {
+                        const response = await fetch('{{ route("customer.booking.apply-promo") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                promo_code: this.promoCodeInput.toUpperCase(),
+                                total_price: this.totalPrice
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.promoApplied = true;
+                            this.appliedPromoCode = data.promo_code;
+                            this.promoDiscount = data.discount;
+                            this.promoMessage = data.message;
+                        } else {
+                            this.promoApplied = false;
+                            this.promoDiscount = 0;
+                            this.promoMessage = data.message || 'Kode promo tidak valid.';
+                        }
+                    } catch (e) {
+                        this.promoMessage = 'Gagal memvalidasi kode promo. Silakan coba lagi.';
+                    } finally {
+                        this.promoLoading = false;
+                    }
+                },
+
+                removePromo() {
+                    this.promoApplied = false;
+                    this.appliedPromoCode = '';
+                    this.promoDiscount = 0;
+                    this.promoMessage = '';
+                    this.promoCodeInput = '';
+                },
+
+                async revalidatePromo() {
+                    if (!this.promoApplied || this.totalPrice <= 0) {
+                        this.removePromo();
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('{{ route("customer.booking.apply-promo") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                promo_code: this.appliedPromoCode,
+                                total_price: this.totalPrice
+                            })
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            this.promoDiscount = data.discount;
+                        } else {
+                            this.removePromo();
+                        }
+                    } catch (e) {
+                        // Keep current state on network error
+                    }
                 }
             };
         }

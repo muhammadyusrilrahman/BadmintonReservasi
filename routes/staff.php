@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Staff\CheckInController;
 use App\Http\Controllers\Staff\DashboardController;
+use App\Http\Controllers\Staff\ScheduleController;
+use App\Http\Controllers\Staff\MaintenanceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,7 +27,12 @@ Route::middleware(['auth', 'verified', 'role:staff'])
         Route::post('/checkin/process/{reservation}', [CheckInController::class, 'process'])->name('checkin.process');
         Route::get('/checkin/history', [CheckInController::class, 'history'])->name('checkin.history');
 
-        // Future routes:
-        // Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
-        // Route::resource('maintenance', MaintenanceController::class);
+        // Schedule & Maintenance
+        Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
+        
+        Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
+        Route::get('/maintenance/create', [MaintenanceController::class, 'create'])->name('maintenance.create');
+        Route::post('/maintenance', [MaintenanceController::class, 'store'])->name('maintenance.store');
+        Route::get('/maintenance/{maintenance}', [MaintenanceController::class, 'show'])->name('maintenance.show');
+        Route::patch('/maintenance/{maintenance}/status', [MaintenanceController::class, 'updateStatus'])->name('maintenance.update-status');
     });

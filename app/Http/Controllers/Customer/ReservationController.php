@@ -11,12 +11,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Exception;
+use App\Services\PromoCodeService;
 
 class ReservationController extends BaseController
 {
     public function __construct(
         private readonly ReservationService $reservationService,
-        private readonly \App\Services\NotificationService $notificationService
+        private readonly \App\Services\NotificationService $notificationService,
+        private readonly PromoCodeService $promoCodeService
     ) {
     }
 
@@ -62,6 +64,7 @@ class ReservationController extends BaseController
             'bookings.*.schedule_ids.*'  => ['integer', 'exists:court_schedules,id'],
             'payment_method'             => ['required', 'in:transfer,ewallet'],
             'notes'                      => ['nullable', 'string', 'max:500'],
+            'promo_code'                 => ['nullable', 'string', 'max:50'],
         ], [], [
             'court_id'                   => 'lapangan',
             'bookings'                   => 'data booking',
@@ -82,6 +85,7 @@ class ReservationController extends BaseController
                     courtId: (int) $request->court_id,
                     paymentMethod: $request->payment_method,
                     notes: $request->notes,
+                    promoCode: $request->promo_code,
                 );
 
                 foreach ($reservations as $reservation) {
@@ -164,6 +168,37 @@ class ReservationController extends BaseController
             return back()->with('success', 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.');
         } catch (Exception $e) {
             return $this->backWithError($e->getMessage());
+        }
+    }
+
+    /**
+     * AJAX: Validate and calculate promo code discount.
+     */
+    public function applyPromo(Request $request): JsonResponse
+    {
+        $request->validate([
+            'promo_code'    => ['required', 'string', 'max:50'],
+            'total_price'   => ['required', 'integer', 'min:0'],
+        ]);
+
+        try {
+            $result = $this->promoCodeService->validateAndApply(
+                $request->promo_code,
+                (int) $request->total_price
+            );
+
+            return response()->json([
+                'success'         => true,
+                'message'         => $result['message'],
+                'discount'        => $result['discount'],
+                'promo_code'      => $result['promo']->code,
+                'discount_label'  => $result['promo']->formatted_discount,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
         }
     }
 }

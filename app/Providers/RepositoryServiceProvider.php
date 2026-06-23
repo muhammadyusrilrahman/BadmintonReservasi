@@ -17,6 +17,7 @@ class RepositoryServiceProvider extends ServiceProvider
         \App\Repositories\Contracts\UserRepositoryInterface::class => \App\Repositories\Eloquent\UserRepository::class,
         \App\Repositories\Contracts\ReservationRepositoryInterface::class => \App\Repositories\Eloquent\ReservationRepository::class,
         \App\Repositories\Contracts\PaymentRepositoryInterface::class => \App\Repositories\Eloquent\PaymentRepository::class,
+        \App\Repositories\Contracts\PromoCodeRepositoryInterface::class => \App\Repositories\Eloquent\PromoCodeRepository::class,
     ];
 
     /**

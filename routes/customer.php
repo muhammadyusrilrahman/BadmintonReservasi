@@ -22,6 +22,7 @@ Route::middleware(['auth', 'verified', 'role:customer'])
         Route::get('/booking', [ReservationController::class, 'create'])->name('booking.create');
         Route::get('/booking/slots', [ReservationController::class, 'getAvailableSlots'])->name('booking.slots');
         Route::post('/booking', [ReservationController::class, 'store'])->name('booking.store');
+        Route::post('/booking/apply-promo', [ReservationController::class, 'applyPromo'])->name('booking.apply-promo');
 
         // Reservations
         Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');

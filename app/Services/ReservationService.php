@@ -19,7 +19,8 @@ class ReservationService extends BaseService
         ReservationRepositoryInterface $repository,
         private readonly CourtRepositoryInterface $courtRepository,
         private readonly ReservationValidator $validator,
-        private readonly \App\Services\NotificationService $notificationService
+        private readonly \App\Services\NotificationService $notificationService,
+        private readonly \App\Services\PromoCodeService $promoCodeService
     ) {
         parent::__construct($repository);
     }
@@ -184,9 +185,9 @@ class ReservationService extends BaseService
      *
      * @return array<Reservation>
      */
-    public function createCustomerBooking(array $scheduleIds, int $userId, string $date, int $courtId, ?string $paymentMethod = 'transfer', ?string $notes = null): array
+    public function createCustomerBooking(array $scheduleIds, int $userId, string $date, int $courtId, ?string $paymentMethod = 'transfer', ?string $notes = null, ?string $promoCode = null): array
     {
-        return DB::transaction(function () use ($scheduleIds, $userId, $date, $courtId, $paymentMethod, $notes) {
+        return DB::transaction(function () use ($scheduleIds, $userId, $date, $courtId, $paymentMethod, $notes, $promoCode) {
             // Pessimistic Locking: Lock court row for update
             $court = $this->courtRepository->findWithLock($courtId);
             if (!$court) {
@@ -203,29 +204,68 @@ class ReservationService extends BaseService
                 ->orderBy('start_time')
                 ->get();
 
+            // Phase 1.5: Validate promo code if provided
+            $promoData = null;
+            if ($promoCode) {
+                // Calculate total price first for promo validation
+                $totalOriginalPrice = $schedules->sum('price');
+                $promoData = $this->promoCodeService->validateAndApply($promoCode, $totalOriginalPrice);
+            }
+
             // Phase 2: Create reservations & payments
             $reservations = [];
+            $totalSlots = count($schedules);
 
-            foreach ($schedules as $schedule) {
+            // If promo is applied, distribute discount proportionally across slots
+            $remainingDiscount = $promoData ? $promoData['discount'] : 0;
+
+            foreach ($schedules as $index => $schedule) {
                 $startCarbon = Carbon::parse($schedule->start_time);
                 $endCarbon = Carbon::parse($schedule->end_time);
                 $durationHours = (int) $startCarbon->diffInHours($endCarbon);
                 if ($durationHours < 1) $durationHours = 1;
 
-                $reservation = $this->repository->create([
+                $originalPrice = $schedule->price;
+                $slotDiscount = 0;
+
+                if ($promoData && $remainingDiscount > 0) {
+                    if ($index === $totalSlots - 1) {
+                        // Last slot gets the remaining discount to avoid rounding issues
+                        $slotDiscount = min($remainingDiscount, $originalPrice);
+                    } else {
+                        // Distribute proportionally
+                        $totalOriginalPrice = $schedules->sum('price');
+                        $slotDiscount = (int) floor($promoData['discount'] * $originalPrice / $totalOriginalPrice);
+                        $slotDiscount = min($slotDiscount, $originalPrice, $remainingDiscount);
+                    }
+                    $remainingDiscount -= $slotDiscount;
+                }
+
+                $finalPrice = $originalPrice - $slotDiscount;
+
+                $reservationData = [
                     'user_id'        => $userId,
                     'court_id'       => $court->id,
                     'date'           => $date,
                     'start_time'     => $schedule->start_time,
                     'end_time'       => $schedule->end_time,
                     'duration_hours' => $durationHours,
-                    'total_price'    => $schedule->price,
+                    'total_price'    => $finalPrice,
                     'status'         => 'pending',
                     'notes'          => $notes,
-                ]);
+                ];
+
+                // Add promo data if applicable
+                if ($promoData && $slotDiscount > 0) {
+                    $reservationData['promo_code_id']  = $promoData['promo']->id;
+                    $reservationData['original_price'] = $originalPrice;
+                    $reservationData['discount_amount'] = $slotDiscount;
+                }
+
+                $reservation = $this->repository->create($reservationData);
 
                 $reservation->payment()->create([
-                    'amount'         => $schedule->price,
+                    'amount'         => $finalPrice,
                     'payment_method' => $paymentMethod,
                     'status'         => 'pending',
                 ]);
@@ -234,6 +274,11 @@ class ReservationService extends BaseService
                 ExpireReservationJob::dispatch($reservation)->delay(now()->addMinutes(config('reservation.expiry_minutes')));
 
                 $reservations[] = $reservation;
+            }
+
+            // Increment promo usage count
+            if ($promoData) {
+                $this->promoCodeService->incrementUsage($promoData['promo']);
             }
 
             return $reservations;

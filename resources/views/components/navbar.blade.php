@@ -56,6 +56,7 @@
                                                     'refund_approved' => '💰',
                                                     'reschedule_approved' => '🕒',
                                                     'schedule_changed' => '⚠️',
+                                                    'maintenance' => '🛠️',
                                                 ];
                                                 echo $iconMap[$notification->data['type'] ?? ''] ?? '🔔';
                                             @endphp

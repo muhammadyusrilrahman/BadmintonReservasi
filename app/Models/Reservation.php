@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['user_id', 'court_id', 'date', 'start_time', 'end_time', 'duration_hours', 'total_price', 'status', 'notes', 'booking_code', 'checked_in_at', 'checked_in_by', 'reschedule_count'])]
+#[Fillable(['user_id', 'court_id', 'date', 'start_time', 'end_time', 'duration_hours', 'total_price', 'status', 'notes', 'booking_code', 'checked_in_at', 'checked_in_by', 'reschedule_count', 'promo_code_id', 'original_price', 'discount_amount'])]
 class Reservation extends Model
 {
     use LogsActivity;
@@ -39,6 +39,8 @@ class Reservation extends Model
             'date'             => 'date',
             'duration_hours'   => 'integer',
             'total_price'      => 'integer',
+            'original_price'   => 'integer',
+            'discount_amount'  => 'integer',
             'checked_in_at'    => 'datetime',
             'reschedule_count' => 'integer',
         ];
@@ -108,6 +110,14 @@ class Reservation extends Model
     public function review(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Review::class);
+    }
+
+    /**
+     * Kode promo yang digunakan.
+     */
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class);
     }
 
     /**
@@ -207,6 +217,24 @@ class Reservation extends Model
     public function getFormattedTotalPriceAttribute(): string
     {
         return 'Rp ' . number_format($this->total_price, 0, ',', '.');
+    }
+
+    public function getFormattedOriginalPriceAttribute(): string
+    {
+        return 'Rp ' . number_format($this->original_price ?? $this->total_price, 0, ',', '.');
+    }
+
+    public function getFormattedDiscountAttribute(): string
+    {
+        return 'Rp ' . number_format($this->discount_amount ?? 0, 0, ',', '.');
+    }
+
+    /**
+     * Apakah reservasi menggunakan promo.
+     */
+    public function getHasPromoAttribute(): bool
+    {
+        return $this->promo_code_id !== null && $this->discount_amount > 0;
     }
 
     /**

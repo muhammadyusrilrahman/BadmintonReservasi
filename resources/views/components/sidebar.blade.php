@@ -66,6 +66,7 @@
             <div class="space-y-1">
                 <x-sidebar-link href="{{ route('admin.courts.index') }}" :active="request()->routeIs('admin.courts.*')" icon="court">Kelola Lapangan</x-sidebar-link>
                 <x-sidebar-link href="{{ route('admin.users.index') }}" :active="request()->routeIs('admin.users.*')" icon="users">Kelola Pengguna</x-sidebar-link>
+                <x-sidebar-link href="{{ route('admin.promos.index') }}" :active="request()->routeIs('admin.promos.*')" icon="promo">Kelola Promo</x-sidebar-link>
                 <x-sidebar-link href="{{ route('admin.reservations.index') }}" :active="request()->routeIs('admin.reservations.*')" icon="calendar">Reservasi</x-sidebar-link>
                 <x-sidebar-link href="{{ route('admin.refunds.index') }}" :active="request()->routeIs('admin.refunds.*')" icon="money">Persetujuan Refund</x-sidebar-link>
             </div>
@@ -80,6 +81,7 @@
         <div>
             <p class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Sistem</p>
             <div class="space-y-1">
+                <x-sidebar-link href="{{ route('admin.broadcast-maintenance.index') }}" :active="request()->routeIs('admin.broadcast-maintenance.*')" icon="tool">Broadcast Maintenance</x-sidebar-link>
                 <x-sidebar-link href="{{ route('admin.activity-logs.index') }}" :active="request()->routeIs('admin.activity-logs.index')" icon="log">Activity Log</x-sidebar-link>
                 <x-sidebar-link href="#" :active="request()->routeIs('admin.settings.*')" icon="settings">Pengaturan</x-sidebar-link>
             </div>
@@ -99,9 +101,10 @@
         <div>
             <p class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Transaksi</p>
             <div class="space-y-1">
-                <x-sidebar-link href="#" :active="request()->routeIs('kasir.transactions.*')" icon="money">Transaksi</x-sidebar-link>
-                <x-sidebar-link href="#" :active="request()->routeIs('kasir.today.*')" icon="calendar">Reservasi Hari Ini</x-sidebar-link>
-                <x-sidebar-link href="#" :active="request()->routeIs('kasir.daily-report.*')" icon="chart">Laporan Harian</x-sidebar-link>
+                <x-sidebar-link href="{{ route('kasir.promos.index') }}" :active="request()->routeIs('kasir.promos.*')" icon="promo">Daftar Promo</x-sidebar-link>
+                <x-sidebar-link href="{{ route('kasir.transactions.index') }}" :active="request()->routeIs('kasir.transactions.*')" icon="money">Transaksi</x-sidebar-link>
+                <x-sidebar-link href="{{ route('kasir.today.index') }}" :active="request()->routeIs('kasir.today.*')" icon="calendar">Reservasi Hari Ini</x-sidebar-link>
+                <x-sidebar-link href="{{ route('kasir.daily-report.index') }}" :active="request()->routeIs('kasir.daily-report.*')" icon="chart">Laporan Harian</x-sidebar-link>
             </div>
         </div>
         @elseif($userRole === 'staff')
@@ -116,8 +119,8 @@
         <div>
             <p class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Lapangan</p>
             <div class="space-y-1">
-                <x-sidebar-link href="#" :active="request()->routeIs('staff.schedule.*')" icon="calendar">Jadwal Lapangan</x-sidebar-link>
-                <x-sidebar-link href="#" :active="request()->routeIs('staff.maintenance.*')" icon="tool">Maintenance</x-sidebar-link>
+                <x-sidebar-link :href="route('staff.schedule.index')" :active="request()->routeIs('staff.schedule.*')" icon="calendar">Jadwal Lapangan</x-sidebar-link>
+                <x-sidebar-link :href="route('staff.maintenance.index')" :active="request()->routeIs('staff.maintenance.*')" icon="tool">Maintenance</x-sidebar-link>
             </div>
         </div>
         @endif
