@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Landing — redirect based on auth state
+// Landing page — show to guests, redirect authenticated users to their dashboard
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route(auth()->user()->getDashboardRoute());
     }
-    return redirect()->route('login');
-});
+    return view('landing');
+})->name('landing');
 
 // Authenticated routes
 Route::middleware(['auth', 'verified'])->group(function () {
