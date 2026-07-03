@@ -1204,6 +1204,7 @@
                 <div class="made-with">
                     Dibuat dengan <i class="fas fa-heart"></i> untuk para pebulutangkis Indonesia
                 </div>
+                <p style="margin-top: 0.5rem; font-size: 0.8rem;">Dikembangkan oleh <strong style="color: var(--primary-light);">M Risky Alpin Redo</strong></p>
             </div>
         </div>
     </footer>
