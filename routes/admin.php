@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CourtController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -66,5 +67,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('broadcast-maintenance', [\App\Http\Controllers\Admin\BroadcastMaintenanceController::class, 'index'])->name('broadcast-maintenance.index');
         Route::get('broadcast-maintenance/create', [\App\Http\Controllers\Admin\BroadcastMaintenanceController::class, 'create'])->name('broadcast-maintenance.create');
         Route::post('broadcast-maintenance', [\App\Http\Controllers\Admin\BroadcastMaintenanceController::class, 'store'])->name('broadcast-maintenance.store');
+
+        // Pengaturan Aplikasi
+        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
     });
 

@@ -83,7 +83,7 @@
             <div class="space-y-1">
                 <x-sidebar-link href="{{ route('admin.broadcast-maintenance.index') }}" :active="request()->routeIs('admin.broadcast-maintenance.*')" icon="tool">Broadcast Maintenance</x-sidebar-link>
                 <x-sidebar-link href="{{ route('admin.activity-logs.index') }}" :active="request()->routeIs('admin.activity-logs.index')" icon="log">Activity Log</x-sidebar-link>
-                <x-sidebar-link href="#" :active="request()->routeIs('admin.settings.*')" icon="settings">Pengaturan</x-sidebar-link>
+                <x-sidebar-link href="{{ route('admin.settings.index') }}" :active="request()->routeIs('admin.settings.*')" icon="settings">Pengaturan</x-sidebar-link>
             </div>
         </div>
         @elseif($userRole === 'customer')
