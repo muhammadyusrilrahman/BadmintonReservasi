@@ -1202,9 +1202,8 @@
             <div class="footer-bottom">
                 <p>&copy; {{ date('Y') }} Lapangan Badminton Adenia Salsa. Semua hak dilindungi.</p>
                 <div class="made-with">
-                    Dibuat dengan <i class="fas fa-heart"></i> untuk para pebulutangkis Indonesia
+                    Dibuat dengan <i class="fas fa-heart"></i> oleh <strong>M Risky Alpin Redo</strong>
                 </div>
-                <p style="margin-top: 0.5rem; font-size: 0.8rem;">Dikembangkan oleh <strong style="color: var(--primary-light);">M Risky Alpin Redo</strong></p>
             </div>
         </div>
     </footer>

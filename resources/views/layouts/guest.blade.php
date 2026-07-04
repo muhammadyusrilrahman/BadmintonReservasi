@@ -114,7 +114,8 @@
 
                 {{-- Footer --}}
                 <p class="text-center text-sm text-slate-400 dark:text-slate-500 mt-8">
-                    &copy; {{ date('Y') }} Adenia Salsa Badminton. All rights reserved.
+                    &copy; {{ date('Y') }} Adenia Salsa Badminton. All rights reserved.<br>
+                    <span>Dikembangkan oleh <strong>M Risky Alpin Redo</strong></span>
                 </p>
             </div>
         </div>

@@ -46,7 +46,7 @@
 
             <footer class="border-t border-slate-200 dark:border-slate-800 px-4 sm:px-6 lg:px-8 py-4">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-slate-500 dark:text-slate-400">
-                    <p>&copy; {{ date('Y') }} Adenia Salsa Badminton. All rights reserved.</p>
+                    <p>&copy; {{ date('Y') }} Adenia Salsa Badminton. All rights reserved. &mdash; Dikembangkan oleh <strong>M Risky Alpin Redo</strong></p>
                     <p class="flex items-center gap-1">
                         <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
                         Sistem aktif
