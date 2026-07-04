@@ -28,6 +28,12 @@
     {{-- Judul tab browser --}}
     <title>Lapangan Badminton Adenia Salsa – Reservasi Online</title>
 
+    {{-- ===== FAVICON ===== --}}
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('favicon-192.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+
     {{-- ===== FONT EKSTERNAL ===== --}}
     {{-- Preconnect mempercepat koneksi ke server Google Fonts sebelum font dimuat --}}
     <!-- Google Fonts: Outfit (judul/heading) + Space Grotesk (teks body) -->
