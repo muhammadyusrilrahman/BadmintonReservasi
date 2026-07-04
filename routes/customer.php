@@ -47,4 +47,7 @@ Route::middleware(['auth', 'verified', 'role:customer'])
         // Review
         Route::get('/reservations/{reservation}/review', [ReviewController::class, 'create'])->name('reservations.review.create');
         Route::post('/reservations/{reservation}/review', [ReviewController::class, 'store'])->name('reservations.review.store');
+        Route::get('/reservations/{reservation}/review/edit', [ReviewController::class, 'edit'])->name('reservations.review.edit');
+        Route::put('/reservations/{reservation}/review', [ReviewController::class, 'update'])->name('reservations.review.update');
+        Route::delete('/reservations/{reservation}/review', [ReviewController::class, 'destroy'])->name('reservations.review.destroy');
     });
