@@ -258,7 +258,91 @@
     @endpush
     @endif
 
+    {{-- ==================== SECTION ULASAN ==================== --}}
+    @if($reservation->status === 'completed')
+        @php
+            $existingReview = $reservation->review;
+            $canReview      = \App\Models\Review::canReview($reservation);
+        @endphp
+
+        <div class="mt-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-5">
+                <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Ulasan Saya
+            </h3>
+
+            @if($existingReview)
+                {{-- Sudah ada review --}}
+                <div class="space-y-3">
+                    {{-- Rating bintang --}}
+                    <div class="flex items-center gap-1">
+                        @for($i = 1; $i <= 5; $i++)
+                            <svg class="w-5 h-5 {{ $i <= $existingReview->rating ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600' }}"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        @endfor
+                        <span class="ml-1 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $existingReview->rating }}/5</span>
+                        <span class="text-xs text-slate-400 ml-2">{{ $existingReview->created_at->diffForHumans() }}</span>
+                    </div>
+
+                    {{-- Komentar --}}
+                    @if($existingReview->comment)
+                        <p class="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 leading-relaxed">
+                            "{{ $existingReview->comment }}"
+                        </p>
+                    @else
+                        <p class="text-sm text-slate-400 italic">Tidak ada komentar.</p>
+                    @endif
+
+                    {{-- Balasan Admin --}}
+                    @if($existingReview->admin_reply)
+                        <div class="ml-4 pl-4 border-l-2 border-pink-300 dark:border-pink-700">
+                            <p class="text-xs font-semibold text-pink-600 dark:text-pink-400 mb-1">Balasan Admin · {{ $existingReview->admin_reply_at?->diffForHumans() }}</p>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">{{ $existingReview->admin_reply }}</p>
+                        </div>
+                    @endif
+
+                    {{-- Badge tersembunyi --}}
+                    @if($existingReview->is_hidden)
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs text-slate-500 dark:text-slate-400">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                            Ulasan ini disembunyikan dari publik oleh admin
+                        </div>
+                    @endif
+                </div>
+
+            @elseif($canReview)
+                {{-- Belum ada review, boleh review --}}
+                <div class="text-center py-4">
+                    <div class="w-14 h-14 bg-amber-50 dark:bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-7 h-7 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Bagaimana pengalaman bermain Anda?</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Bantu kami berkembang dengan memberikan ulasan jujur Anda.</p>
+                    <a href="{{ route('customer.reservations.review.create', $reservation) }}"
+                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white text-sm font-semibold rounded-xl shadow-md shadow-amber-400/30 transition-all duration-200 active:scale-95">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        Tulis Ulasan
+                    </a>
+                </div>
+
+            @else
+                {{-- Belum boleh review (masih < 1 hari) --}}
+                <div class="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm text-slate-500 dark:text-slate-400">
+                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p>Ulasan dapat ditulis <strong>1 hari setelah</strong> tanggal bermain ({{ $reservation->date->addDay()->translatedFormat('d F Y') }}).</p>
+                </div>
+            @endif
+        </div>
+    @endif
+
     @if($reservation->payment && $reservation->payment->status === 'pending')
+
         @push('scripts')
             <script src="https://app.{{ config('services.midtrans.is_production') ? '' : 'sandbox.' }}midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
             <script>

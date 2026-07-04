@@ -1039,6 +1039,65 @@
         </div>
     </section>
 
+    <!-- ULASAN PELANGGAN -->
+    @if(isset($reviews) && $reviews->isNotEmpty())
+    <div class="section-divider"></div>
+    <section id="ulasan">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-tag">✦ Testimoni</div>
+                <h2 class="section-title">Ulasan <span>Pelanggan</span></h2>
+                <p class="section-desc">Apa kata mereka yang sudah bermain di Adenia Salsa Badminton Court.</p>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:1.5rem; margin-top:2.5rem;">
+                @foreach($reviews as $review)
+                <div class="reveal" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; padding: 1.5rem; display:flex; flex-direction:column; gap:1rem; backdrop-filter: blur(10px); transition: transform 0.3s, box-shadow 0.3s;"
+                     onmouseenter="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 40px rgba(233,30,140,0.15)'"
+                     onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+
+                    {{-- Header: Avatar + Nama + Lapangan --}}
+                    <div style="display:flex; align-items:center; gap:0.875rem;">
+                        <div style="width:44px; height:44px; border-radius:50%; background: linear-gradient(135deg, #e91e8c, #7c3aed); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:1.1rem; flex-shrink:0;">
+                            {{ strtoupper(substr($review->user->name ?? '?', 0, 1)) }}
+                        </div>
+                        <div>
+                            <p style="font-weight:600; color:#fff; font-size:0.9rem; margin:0;">{{ $review->user->name ?? 'Pengguna' }}</p>
+                            <p style="font-size:0.75rem; color:rgba(255,255,255,0.5); margin:0;">{{ $review->court->name ?? '' }}</p>
+                        </div>
+                        <div style="margin-left:auto; font-size:0.7rem; color:rgba(255,255,255,0.4);">
+                            {{ $review->created_at->diffForHumans() }}
+                        </div>
+                    </div>
+
+                    {{-- Rating Bintang --}}
+                    <div style="display:flex; gap:3px;">
+                        @for($i = 1; $i <= 5; $i++)
+                            <svg style="width:18px; height:18px; color:{{ $i <= $review->rating ? '#fbbf24' : 'rgba(255,255,255,0.2)' }};" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        @endfor
+                    </div>
+
+                    {{-- Komentar --}}
+                    @if($review->comment)
+                    <p style="font-size:0.875rem; color:rgba(255,255,255,0.75); line-height:1.6; font-style:italic; margin:0;">"{{ Str::limit($review->comment, 160) }}"</p>
+                    @endif
+
+                    {{-- Balasan Admin --}}
+                    @if($review->admin_reply)
+                    <div style="border-left: 2px solid #e91e8c; padding-left: 0.875rem; margin-top:0.25rem;">
+                        <p style="font-size:0.7rem; font-weight:600; color:#e91e8c; margin:0 0 0.25rem;">Balasan Admin</p>
+                        <p style="font-size:0.8rem; color:rgba(255,255,255,0.6); margin:0;">{{ Str::limit($review->admin_reply, 120) }}</p>
+                    </div>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+
     <div class="section-divider"></div>
 
     <!-- KONTAK -->

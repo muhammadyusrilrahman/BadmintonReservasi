@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\Customer\ReservationController;
+use App\Http\Controllers\Customer\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,4 +43,8 @@ Route::middleware(['auth', 'verified', 'role:customer'])
         Route::get('/notifications', [\App\Http\Controllers\Customer\NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{id}/read', [\App\Http\Controllers\Customer\NotificationController::class, 'markAsRead'])->name('notifications.read');
         Route::post('/notifications/read-all', [\App\Http\Controllers\Customer\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+
+        // Review
+        Route::get('/reservations/{reservation}/review', [ReviewController::class, 'create'])->name('reservations.review.create');
+        Route::post('/reservations/{reservation}/review', [ReviewController::class, 'store'])->name('reservations.review.store');
     });

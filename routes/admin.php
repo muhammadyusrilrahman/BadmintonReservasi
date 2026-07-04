@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CourtController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -71,5 +72,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // Pengaturan Aplikasi
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+
+        // Review & Ulasan
+        Route::get('reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+        Route::post('reviews/{review}/reply', [AdminReviewController::class, 'reply'])->name('reviews.reply');
+        Route::post('reviews/{review}/toggle-hidden', [AdminReviewController::class, 'toggleHidden'])->name('reviews.toggle-hidden');
+        Route::delete('reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy');
     });
 

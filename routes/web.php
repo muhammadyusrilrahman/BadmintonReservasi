@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Models\Review;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,7 +15,12 @@ Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route(auth()->user()->getDashboardRoute());
     }
-    return view('landing');
+    $reviews = Review::with(['user', 'court'])
+        ->visible()
+        ->latest()
+        ->limit(6)
+        ->get();
+    return view('landing', compact('reviews'));
 })->name('landing');
 
 // Authenticated routes
