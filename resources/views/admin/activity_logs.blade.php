@@ -61,52 +61,41 @@
         </div>
 
         {{-- Interactive Filter Bar --}}
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 mb-6 shadow-sm">
-            <form action="{{ route('admin.activity-logs.index') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 mb-6 shadow-sm">
+            <form action="{{ route('admin.activity-logs.index') }}" method="GET" class="flex flex-wrap gap-2 items-center">
                 {{-- Search Input --}}
-                <div class="flex flex-col">
-                    <label for="search" class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Cari Keyword</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        </span>
-                        <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="User, IP, atau deskripsi..." class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
-                    </div>
+                <div class="relative flex-1 min-w-[160px]">
+                    <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </span>
+                    <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="User, IP, atau deskripsi..."
+                           class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
                 </div>
-
                 {{-- HTTP Method Filter --}}
-                <div class="flex flex-col">
-                    <label for="method" class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Metode HTTP</label>
-                    <select name="method" id="method" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
-                        <option value="">Semua Metode</option>
-                        <option value="POST" {{ request('method') === 'POST' ? 'selected' : '' }}>POST (Simpan)</option>
-                        <option value="PUT" {{ request('method') === 'PUT' ? 'selected' : '' }}>PUT (Update)</option>
-                        <option value="PATCH" {{ request('method') === 'PATCH' ? 'selected' : '' }}>PATCH (Update)</option>
-                        <option value="DELETE" {{ request('method') === 'DELETE' ? 'selected' : '' }}>DELETE (Hapus)</option>
-                        <option value="GET" {{ request('method') === 'GET' ? 'selected' : '' }}>GET (Akses)</option>
-                    </select>
-                </div>
-
+                <select name="method" id="method" class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
+                    <option value="">Semua Metode</option>
+                    <option value="POST" {{ request('method') === 'POST' ? 'selected' : '' }}>POST</option>
+                    <option value="PUT" {{ request('method') === 'PUT' ? 'selected' : '' }}>PUT</option>
+                    <option value="PATCH" {{ request('method') === 'PATCH' ? 'selected' : '' }}>PATCH</option>
+                    <option value="DELETE" {{ request('method') === 'DELETE' ? 'selected' : '' }}>DELETE</option>
+                    <option value="GET" {{ request('method') === 'GET' ? 'selected' : '' }}>GET</option>
+                </select>
                 {{-- Date Filter --}}
-                <div class="flex flex-col">
-                    <label for="date" class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Tanggal</label>
-                    <input type="date" name="date" id="date" value="{{ request('date') }}" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
-                </div>
-
+                <input type="date" name="date" id="date" value="{{ request('date') }}"
+                       class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
                 {{-- Action Buttons --}}
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="flex-1 py-2 bg-indigo-650 hover:bg-indigo-755 text-white text-sm font-semibold rounded-xl transition duration-200 shadow-sm shadow-indigo-600/10 flex items-center justify-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                        Filter
-                    </button>
-                    @if(request()->anyFilled(['search', 'method', 'date']))
-                        <a href="{{ route('admin.activity-logs.index') }}" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-650 dark:text-slate-350 text-sm font-semibold rounded-xl transition duration-200 flex items-center justify-center" title="Reset Filter">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3m0 0l3 3m-3-3v8"/></svg>
-                        </a>
-                    @endif
-                </div>
+                <button type="submit" class="px-3 py-1.5 bg-indigo-650 hover:bg-indigo-755 text-white text-xs font-semibold rounded-lg transition duration-200 flex items-center gap-1.5 shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                    Filter
+                </button>
+                @if(request()->anyFilled(['search', 'method', 'date']))
+                    <a href="{{ route('admin.activity-logs.index') }}" class="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-650 dark:text-slate-350 rounded-lg transition duration-200 flex items-center shrink-0" title="Reset Filter">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3m0 0l3 3m-3-3v8"/></svg>
+                    </a>
+                @endif
             </form>
         </div>
+
 
         {{-- Logs Table --}}
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">

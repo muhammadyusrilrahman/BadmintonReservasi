@@ -17,54 +17,50 @@
 
     {{-- Filter Bar --}}
     <form method="GET" action="{{ route('admin.reservations.index') }}"
-          class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 mb-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 mb-6">
+        <div class="flex flex-wrap gap-2 items-center">
             {{-- Search --}}
-            <div class="lg:col-span-2 relative">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="relative flex-1 min-w-[160px]">
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Cari nama atau email..."
-                       class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
+                       class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
             </div>
             {{-- Date Filter --}}
-            <div>
-                <input type="date" name="date" value="{{ request('date') }}"
-                       class="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
-            </div>
+            <input type="date" name="date" value="{{ request('date') }}"
+                   class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
             {{-- Status Filter --}}
-            <div>
-                <select name="status"
-                        class="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
-                    <option value="">Semua Status</option>
-                    @foreach(\App\Models\Reservation::STATUS_LABELS as $val => $label)
-                        <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-            {{-- Court Filter & Submit --}}
-            <div class="flex gap-2">
-                <select name="court_id"
-                        class="flex-1 px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
-                    <option value="">Semua Lapangan</option>
-                    @foreach($courts as $court)
-                        <option value="{{ $court->id }}" @selected(request('court_id') == $court->id)>{{ $court->name }}</option>
-                    @endforeach
-                </select>
-                <button type="submit"
-                        class="px-4 py-2.5 bg-[#1e3a5f] text-white text-sm font-medium rounded-xl hover:bg-[#162d4a] transition-colors" title="Filter">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                </button>
-            </div>
-        </div>
-        @if(request()->hasAny(['search','date','status','court_id']))
-            <div class="mt-3">
+            <select name="status"
+                    class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
+                <option value="">Semua Status</option>
+                @foreach(\App\Models\Reservation::STATUS_LABELS as $val => $label)
+                    <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
+                @endforeach
+            </select>
+            {{-- Court Filter --}}
+            <select name="court_id"
+                    class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
+                <option value="">Semua Lapangan</option>
+                @foreach($courts as $court)
+                    <option value="{{ $court->id }}" @selected(request('court_id') == $court->id)>{{ $court->name }}</option>
+                @endforeach
+            </select>
+            {{-- Submit --}}
+            <button type="submit"
+                    class="px-3 py-1.5 bg-[#1e3a5f] text-white text-xs font-medium rounded-lg hover:bg-[#162d4a] transition-colors flex items-center gap-1.5 shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                Filter
+            </button>
+            @if(request()->hasAny(['search','date','status','court_id']))
                 <a href="{{ route('admin.reservations.index') }}"
-                   class="text-xs text-pink-600 dark:text-pink-400 hover:underline">Hapus Filter</a>
-            </div>
-        @endif
+                   class="text-xs text-pink-600 dark:text-pink-400 hover:underline shrink-0">Hapus Filter</a>
+            @endif
+        </div>
     </form>
+
+
 
     {{-- Table Card --}}
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">

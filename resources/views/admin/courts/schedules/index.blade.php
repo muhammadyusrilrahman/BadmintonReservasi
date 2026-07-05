@@ -151,7 +151,7 @@
                                                                 {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
                                                             </span>
                                                         </div>
-                                                        <form action="{{ route('admin.courts.schedules.destroy', [$court->id, $slot->id]) }}" method="POST" id="form-delete-{{ $slot->id }}" class="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <form action="{{ route('admin.courts.schedules.destroy', [$court->id, $slot->id]) }}" method="POST" id="form-delete-{{ $slot->id }}" class="transition-opacity">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="button" @click.prevent="confirmDelete('form-delete-{{ $slot->id }}', 'Hapus slot {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}?')" class="text-red-500 hover:text-red-600 p-1">

@@ -19,20 +19,20 @@
 
     {{-- Filter Bar --}}
     <form method="GET" action="{{ url()->current() }}"
-          class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 mb-6">
-        <div class="flex flex-col sm:flex-row gap-3">
+          class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 mb-6">
+        <div class="flex flex-wrap gap-2 items-center">
             {{-- Search --}}
-            <div class="flex-1 relative">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex-1 min-w-[160px] relative">
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Cari kode promo..."
-                       class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
+                       class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
             </div>
             {{-- Status Filter --}}
             <select name="status"
-                    class="px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
+                    class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition">
                 <option value="">Semua Status</option>
                 <option value="active" @selected(request('status') === 'active')>Aktif</option>
                 <option value="inactive" @selected(request('status') === 'inactive')>Nonaktif</option>
@@ -41,12 +41,12 @@
             </select>
             {{-- Submit --}}
             <button type="submit"
-                    class="px-5 py-2.5 bg-[#1e3a5f] text-white text-sm font-medium rounded-xl hover:bg-[#162d4a] transition-colors">
+                    class="px-3 py-1.5 bg-[#1e3a5f] text-white text-xs font-medium rounded-lg hover:bg-[#162d4a] transition-colors shrink-0">
                 Filter
             </button>
             @if(request()->hasAny(['search','status']))
                 <a href="{{ url()->current() }}"
-                   class="px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl transition-colors">
+                   class="px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors shrink-0">
                     Reset
                 </a>
             @endif
@@ -85,15 +85,15 @@
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
-                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">#</th>
-                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kode Promo</th>
-                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Diskon</th>
-                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Periode</th>
-                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Penggunaan</th>
-                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mode</th>
-                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">#</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kode Promo</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Diskon</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Periode</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Penggunaan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mode</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                             @if(auth()->user()->roles->first()?->name === 'admin')
-                            <th class="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aksi</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aksi</th>
                             @endif
                         </tr>
                     </thead>
@@ -101,12 +101,12 @@
                         @foreach($promos as $promo)
                             <tr class="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                 {{-- Number --}}
-                                <td class="px-6 py-4 text-sm text-slate-400 dark:text-slate-500 w-12">
+                                <td class="px-4 py-3.5 text-sm text-slate-400 dark:text-slate-500 w-10">
                                     {{ $promos->firstItem() + $loop->index }}
                                 </td>
 
                                 {{-- Code + Description --}}
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3.5">
                                     <div>
                                         <p class="font-semibold text-slate-800 dark:text-white text-sm font-mono tracking-wide">{{ $promo->code }}</p>
                                         @if($promo->description)
@@ -116,7 +116,7 @@
                                 </td>
 
                                 {{-- Discount --}}
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3.5">
                                     <div>
                                         <span class="text-sm font-semibold text-slate-800 dark:text-white">{{ $promo->formatted_discount }}</span>
                                         <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{{ $promo->discount_type_label }}</p>
@@ -124,7 +124,7 @@
                                 </td>
 
                                 {{-- Period --}}
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3.5">
                                     <div class="text-sm text-slate-600 dark:text-slate-300">
                                         <p>{{ $promo->valid_from->format('d M Y') }}</p>
                                         <p class="text-xs text-slate-400 dark:text-slate-500">s/d {{ $promo->valid_until->format('d M Y') }}</p>
@@ -132,14 +132,14 @@
                                 </td>
 
                                 {{-- Usage --}}
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3.5">
                                     <span class="text-sm text-slate-600 dark:text-slate-300">
                                         {{ $promo->usage_count }} / {{ $promo->max_usage ?? '∞' }}
                                     </span>
                                 </td>
 
                                 {{-- Activation Mode --}}
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3.5">
                                     @php
                                         $modeColor = $promo->activation_mode === 'auto' ? 'blue' : 'slate';
                                     @endphp
@@ -151,7 +151,7 @@
                                 </td>
 
                                 {{-- Status Toggle --}}
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3.5">
                                     @if(auth()->user()->roles->first()?->name === 'admin')
                                     <form method="POST" action="{{ route('admin.promos.toggle-active', $promo) }}" class="inline">
                                         @csrf
@@ -187,8 +187,8 @@
 
                                 {{-- Actions (Admin only) --}}
                                 @if(auth()->user()->roles->first()?->name === 'admin')
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity">
+                                <td class="px-4 py-3.5">
+                                    <div class="flex items-center justify-end gap-2 transition-opacity">
                                         <a href="{{ route('admin.promos.edit', $promo) }}"
                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -8,45 +8,34 @@
     </div>
 
     {{-- Filters --}}
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 mb-6">
-        <form method="GET" action="{{ route('kasir.transactions.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pencarian</label>
-                <div class="relative">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ $search }}" placeholder="Nama / Kode Booking..."
-                           class="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors">
-                </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 mb-6">
+        <form method="GET" action="{{ route('kasir.transactions.index') }}" class="flex flex-wrap gap-2 items-center">
+            {{-- Search --}}
+            <div class="relative flex-1 min-w-[160px]">
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" name="search" value="{{ $search }}" placeholder="Nama / Kode Booking..."
+                       class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors">
             </div>
-            
-            <div>
-                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
-                <select name="status" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors">
-                    <option value="">Semua Status</option>
-                    @foreach(\App\Models\Payment::STATUS_LABELS as $val => $label)
-                        <option value="{{ $val }}" {{ $status === $val ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Dari Tanggal</label>
-                <input type="date" name="date_from" value="{{ $dateFrom }}"
-                       class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors">
-            </div>
-
-            <div class="flex items-end gap-2">
-                <div class="flex-1">
-                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Sampai Tanggal</label>
-                    <input type="date" name="date_to" value="{{ $dateTo }}"
-                           class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors">
-                </div>
-                <button type="submit" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-white text-sm font-semibold rounded-xl transition-colors shrink-0">
-                    Filter
-                </button>
-            </div>
+            {{-- Status --}}
+            <select name="status" class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors">
+                <option value="">Semua Status</option>
+                @foreach(\App\Models\Payment::STATUS_LABELS as $val => $label)
+                    <option value="{{ $val }}" {{ $status === $val ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+            {{-- Dari Tanggal --}}
+            <input type="date" name="date_from" value="{{ $dateFrom }}"
+                   class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors">
+            {{-- Sampai Tanggal --}}
+            <input type="date" name="date_to" value="{{ $dateTo }}"
+                   class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-colors">
+            {{-- Submit --}}
+            <button type="submit" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-white text-xs font-semibold rounded-lg transition-colors shrink-0">
+                Filter
+            </button>
         </form>
     </div>
+
 
     {{-- Transactions Table --}}
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">

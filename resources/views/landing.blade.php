@@ -691,7 +691,8 @@
         }
 
         /* ===== SCROLL REVEAL ===== */
-        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.7s ease; }
+        /* Semua elemen langsung tampil tanpa perlu di-scroll */
+        .reveal { opacity: 1; transform: translateY(0); transition: all 0.7s ease; }
         .reveal.visible { opacity: 1; transform: translateY(0); }
         .reveal-delay-1 { transition-delay: 0.1s; }
         .reveal-delay-2 { transition-delay: 0.2s; }

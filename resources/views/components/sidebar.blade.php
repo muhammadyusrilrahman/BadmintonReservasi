@@ -5,15 +5,7 @@
     $userInitial = strtoupper(substr($authUser->name, 0, 1));
 @endphp
 
-<aside x-show="sidebarOpen"
-       x-transition:enter="transition-transform ease-out duration-300"
-       x-transition:enter-start="-translate-x-full"
-       x-transition:enter-end="translate-x-0"
-       x-transition:leave="transition-transform ease-in duration-200"
-       x-transition:leave-start="translate-x-0"
-       x-transition:leave-end="-translate-x-full"
-       class="fixed inset-y-0 left-0 z-40 w-72 flex flex-col bg-gradient-to-b from-[#0f1d36] via-[#152647] to-[#0f1d36] shadow-2xl shadow-navy-900/50"
-       x-cloak>
+<aside class="fixed inset-y-0 left-0 z-40 w-72 flex flex-col bg-gradient-to-b from-[#0f1d36] via-[#152647] to-[#0f1d36] shadow-2xl shadow-navy-900/50">
 
     {{-- Logo --}}
     <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10">
