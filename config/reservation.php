@@ -10,5 +10,5 @@ return [
     | ExpireReservationJob (delayed job dispatch), and
     | CancelExpiredReservations (artisan command).
     */
-    'expiry_minutes' => env('RESERVATION_EXPIRY_MINUTES', 15),
+    'expiry_minutes' => (int) env('RESERVATION_EXPIRY_MINUTES', 15),
 ];
