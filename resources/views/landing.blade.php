@@ -488,7 +488,7 @@
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 220px);
+            grid-auto-rows: 220px;
             gap: 1rem;
         }
         .gallery-item {
@@ -511,6 +511,32 @@
             opacity: 0; transition: opacity 0.3s;
         }
         .gallery-item:hover::after { opacity: 1; }
+
+        /* ===== IMAGE MODAL ===== */
+        .image-modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .image-modal.show { display: flex; opacity: 1; }
+        .image-modal img {
+            max-width: 90%; max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            object-fit: contain;
+        }
+        .image-modal.show img { transform: scale(1); }
+        .modal-close {
+            position: absolute; top: 20px; right: 30px;
+            color: #fff; font-size: 40px; font-weight: bold;
+            cursor: pointer; transition: color 0.3s;
+            z-index: 1001;
+        }
+        .modal-close:hover { color: var(--primary-light); }
 
         /* ===== CONTACT ===== */
         #kontak { padding: 6rem 0; background: linear-gradient(180deg, rgba(233,30,140,0.02), rgba(139,92,246,0.03)); }
@@ -882,7 +908,7 @@
             <div class="courts-layout">
                 <div class="courts-image-wrap reveal">
                     <div class="courts-glow"></div>
-                    <img src="/images/court-interior.png" alt="Interior Lapangan Badminton Adenia Salsa">
+                    <img src="/images/lapangan badminton.jpeg" alt="Interior Lapangan Badminton Adenia Salsa">
                 </div>
                 <div class="courts-info reveal reveal-delay-2">
                     <div class="section-tag">✦ Tentang Lapangan</div>
@@ -891,7 +917,7 @@
                     </h2>
                     <p>Adenia Salsa Badminton dibangun dengan standar lapangan internasional. Setiap detail dirancang untuk memberikan pengalaman bermain yang sempurna, dari tekstur lantai hingga ketinggian atap.</p>
                     <ul class="courts-list">
-                        <li><span class="check"><i class="fas fa-check"></i></span> 6 lapangan aktif dengan karpet sintetis premium</li>
+                        <li><span class="check"><i class="fas fa-check"></i></span> 3 lapangan aktif dengan karpet sintetis premium</li>
                         <li><span class="check"><i class="fas fa-check"></i></span> Tinggi atap 9 meter standar internasional</li>
                         <li><span class="check"><i class="fas fa-check"></i></span> Net badminton standar BWF, diganti secara berkala</li>
                         <li><span class="check"><i class="fas fa-check"></i></span> Lahan parkir luas untuk 50+ kendaraan</li>
@@ -1022,19 +1048,46 @@
             </div>
             <div class="gallery-grid reveal">
                 <div class="gallery-item">
-                    <img src="/images/court-interior.png" alt="Interior Lapangan">
+                    <img src="/images/10.jpeg" alt="Fasilitas 1">
                 </div>
                 <div class="gallery-item">
-                    <img src="/images/hero-court.png" alt="Lapangan Atas">
+                    <img src="/images/12.jpeg" alt="Fasilitas 2">
                 </div>
                 <div class="gallery-item">
-                    <img src="/images/court-interior.png" alt="Area Duduk">
+                    <img src="/images/3.jpeg" alt="Fasilitas 3">
                 </div>
                 <div class="gallery-item">
-                    <img src="/images/hero-court.png" alt="Net Lapangan">
+                    <img src="/images/4.jpeg" alt="Fasilitas 4">
                 </div>
                 <div class="gallery-item">
-                    <img src="/images/court-interior.png" alt="Pencahayaan">
+                    <img src="/images/7.jpeg" alt="Fasilitas 5">
+                </div>
+                <div class="gallery-item">
+                    <img src="/images/1.jpeg" alt="Fasilitas 6">
+                </div>
+                <div class="gallery-item">
+                    <img src="/images/2.jpeg" alt="Fasilitas 7">
+                </div>
+                <div class="gallery-item">
+                    <img src="/images/6.jpeg" alt="Fasilitas 8">
+                </div>
+                <div class="gallery-item">
+                    <img src="/images/8.jpeg" alt="Fasilitas 9">
+                </div>
+                <div class="gallery-item">
+                    <img src="/images/9.jpeg" alt="Fasilitas 10">
+                </div>
+                <div class="gallery-item">
+                    <img src="/images/11.jpeg" alt="Fasilitas 11">
+                </div>
+                <div class="gallery-item">
+                    <img src="/images/13.jpeg" alt="Fasilitas 12">
+                </div>
+                <div class="gallery-item">
+                    <img src="/images/14.jpeg" alt="Fasilitas 13">
+                </div>
+                <div class="gallery-item">
+                    <img src="/images/court-interior.jpeg" alt="Fasilitas 14">
                 </div>
             </div>
         </div>
@@ -1274,6 +1327,12 @@
         </div>
     </footer>
 
+    <!-- MODAL GALLERY -->
+    <div id="imageModal" class="image-modal">
+        <span class="modal-close" id="modalClose">&times;</span>
+        <img id="modalImg" src="" alt="Gambar Galeri Diperbesar">
+    </div>
+
     <script>
         /**
          * ============================================================
@@ -1450,6 +1509,34 @@
             if (heroBg && window.scrollY < window.innerHeight) {
                 // Geser background 30% dari jarak scroll (lebih lambat = efek parallax)
                 heroBg.style.transform = `translateY(${window.scrollY * 0.3}px)`;
+            }
+        });
+
+        // ============================================================
+        // 8. IMAGE MODAL
+        // ============================================================
+        const imageModal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImg');
+        const modalClose = document.getElementById('modalClose');
+        const galleryItems = document.querySelectorAll('.gallery-item');
+
+        galleryItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const img = this.querySelector('img');
+                if(img) {
+                    modalImg.src = img.src;
+                    imageModal.classList.add('show');
+                }
+            });
+        });
+
+        modalClose.addEventListener('click', () => {
+            imageModal.classList.remove('show');
+        });
+
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                imageModal.classList.remove('show');
             }
         });
     </script>
