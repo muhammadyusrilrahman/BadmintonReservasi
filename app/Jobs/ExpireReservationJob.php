@@ -39,13 +39,14 @@ class ExpireReservationJob implements ShouldQueue
     /**
      * Execute the job.
      *
-     * Uses pessimistic locking to prevent race conditions with
-     * concurrent webhook processing that may confirm the payment.
+     * Jika reservasi memiliki booking_session_id, semua reservasi dalam sesi akan diperiksa.
+     * Payment ditemukan melalui booking_session_id (session payment) ATAU reservation_id (single).
+     * Uses pessimistic locking to prevent race conditions with concurrent webhook processing.
      */
     public function handle(ReservationService $reservationService): void
     {
         DB::transaction(function () use ($reservationService) {
-            // Lock reservation and payment rows to prevent race condition with webhook
+            // Lock reservation row untuk prevent race condition
             $reservation = Reservation::where('id', $this->reservation->id)
                 ->lockForUpdate()
                 ->first();
@@ -54,17 +55,28 @@ class ExpireReservationJob implements ShouldQueue
                 return;
             }
 
-            $payment = Payment::where('reservation_id', $reservation->id)
-                ->lockForUpdate()
-                ->first();
+            // Skip jika reservasi sudah tidak pending (sudah diproses)
+            if ($reservation->status !== 'pending') {
+                return;
+            }
 
-            // Cancel only if both reservation and payment are still pending
-            if ($reservation->status === 'pending' &&
-                ($payment && $payment->status === 'pending')) {
+            // Cari payment: session payment (via booking_session_id) atau direct payment
+            $payment = null;
+            if ($reservation->booking_session_id) {
+                $payment = Payment::where('booking_session_id', $reservation->booking_session_id)
+                    ->lockForUpdate()
+                    ->first();
+            } else {
+                $payment = Payment::where('reservation_id', $reservation->id)
+                    ->lockForUpdate()
+                    ->first();
+            }
 
+            // Cancel hanya jika payment masih pending (belum dibayar)
+            if ($payment && $payment->status === 'pending') {
                 $reservationService->cancelReservation($reservation);
 
-                Log::info("Reservasi #{$reservation->id} dibatalkan otomatis setelah 15 menit karena belum dibayar.");
+                Log::info("Reservasi #{$reservation->id} (sesi: {$reservation->booking_session_id}) dibatalkan otomatis setelah batas waktu karena belum dibayar.");
             }
         });
     }

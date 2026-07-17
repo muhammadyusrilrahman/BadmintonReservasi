@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Court;
+use App\Models\Payment;
 use App\Models\Reservation;
 use App\Repositories\Contracts\CourtRepositoryInterface;
 use App\Repositories\Contracts\ReservationRepositoryInterface;
@@ -11,6 +12,7 @@ use App\Jobs\ExpireReservationJob;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class ReservationService extends BaseService
@@ -132,12 +134,14 @@ class ReservationService extends BaseService
 
     /**
      * Verify payment status.
+     * Jika payment memiliki booking_session_id, semua reservasi dalam sesi tersebut akan diupdate.
      */
     public function verifyPayment(Reservation $reservation, string $status): void
     {
         DB::transaction(function () use ($reservation, $status) {
-            $payment = $reservation->payment;
-            
+            // Gunakan sessionPayment jika tersedia, fallback ke payment langsung
+            $payment = $reservation->sessionPayment();
+
             if (!$payment) {
                 throw new InvalidArgumentException("Data pembayaran tidak ditemukan.");
             }
@@ -154,69 +158,114 @@ class ReservationService extends BaseService
 
             $payment->update($updateData);
 
-            // Sync reservation status
-            if ($status === 'paid') {
-                $reservation->update(['status' => 'confirmed']);
-                $this->notificationService->sendPaymentSuccess($reservation);
-            } elseif ($status === 'failed') {
-                $reservation->update(['status' => 'cancelled']);
-                $this->notificationService->sendPaymentFailed($reservation);
+            // Ambil semua reservasi yang termasuk dalam sesi ini
+            $reservationsToUpdate = $payment->booking_session_id
+                ? Reservation::where('booking_session_id', $payment->booking_session_id)->get()
+                : collect([$reservation]);
+
+            // Sync reservation status untuk semua reservasi dalam sesi
+            foreach ($reservationsToUpdate as $res) {
+                if ($status === 'paid') {
+                    $res->update(['status' => 'confirmed']);
+                    $this->notificationService->sendPaymentSuccess($res);
+                } elseif ($status === 'failed') {
+                    $res->update(['status' => 'cancelled']);
+                    $this->notificationService->sendPaymentFailed($res);
+                }
             }
         });
     }
 
     /**
      * Cancel reservation.
+     * Jika reservasi memiliki booking_session_id, SEMUA reservasi dalam sesi dibatalkan.
      */
     public function cancelReservation(Reservation $reservation): void
     {
         DB::transaction(function () use ($reservation) {
-            $reservation->update(['status' => 'cancelled']);
-            
-            if ($reservation->payment && $reservation->payment->status !== 'paid') {
-                $reservation->payment->update(['status' => 'failed']);
+            if ($reservation->booking_session_id) {
+                // Batalkan semua reservasi dalam sesi yang sama
+                $siblings = Reservation::where('booking_session_id', $reservation->booking_session_id)->get();
+                foreach ($siblings as $sib) {
+                    $sib->update(['status' => 'cancelled']);
+                }
+
+                // Batalkan juga payment sesi
+                $sessionPayment = \App\Models\Payment::where('booking_session_id', $reservation->booking_session_id)->first();
+                if ($sessionPayment && $sessionPayment->status !== 'paid') {
+                    $sessionPayment->update(['status' => 'failed']);
+                }
+            } else {
+                // Single reservation (backward compatible)
+                $reservation->update(['status' => 'cancelled']);
+
+                if ($reservation->payment && $reservation->payment->status !== 'paid') {
+                    $reservation->payment->update(['status' => 'failed']);
+                }
             }
         });
     }
 
     /**
-     * Create customer booking from selected schedule slots.
-     * Each slot generates 1 Reservation + 1 Payment (both pending).
+     * Create customer booking dari slot jadwal yang dipilih.
+     * Semua slot dalam 1 sesi menghasilkan 1 Payment tunggal (booking_session_id).
      *
+     * @param array $scheduleIds        Array schedule IDs untuk hari ini
+     * @param int   $userId
+     * @param string $date
+     * @param int   $courtId
+     * @param string|null $paymentMethod
+     * @param string|null $notes
+     * @param string|null $promoCode
+     * @param string|null $bookingSessionId UUID sesi booking (dibuat di Controller untuk multi-hari)
+     * @param bool  $isLastGroup         true jika ini grup terakhir dalam sesi (akan buat payment)
+     * @param int   $sessionTotalPrice   Total harga seluruh sesi (untuk payment tunggal)
      * @return array<Reservation>
      */
-    public function createCustomerBooking(array $scheduleIds, int $userId, string $date, int $courtId, ?string $paymentMethod = 'transfer', ?string $notes = null, ?string $promoCode = null): array
-    {
-        return DB::transaction(function () use ($scheduleIds, $userId, $date, $courtId, $paymentMethod, $notes, $promoCode) {
+    public function createCustomerBooking(
+        array $scheduleIds,
+        int $userId,
+        string $date,
+        int $courtId,
+        ?string $paymentMethod = 'transfer',
+        ?string $notes = null,
+        ?string $promoCode = null,
+        ?string $bookingSessionId = null,
+        bool $isLastGroup = true,
+        int $sessionTotalPrice = 0
+    ): array {
+        return DB::transaction(function () use (
+            $scheduleIds, $userId, $date, $courtId, $paymentMethod,
+            $notes, $promoCode, $bookingSessionId, $isLastGroup, $sessionTotalPrice
+        ) {
             // Pessimistic Locking: Lock court row for update
             $court = $this->courtRepository->findWithLock($courtId);
             if (!$court) {
                 throw new InvalidArgumentException("Lapangan tidak ditemukan.");
             }
 
-            // Phase 1: Validate ALL slots using the dedicated ReservationValidator
+            // Phase 1: Validate ALL slots menggunakan ReservationValidator
             $this->validator->validateAvailability($court, $date, $scheduleIds);
 
-            // Fetch schedules to build reservations
+            // Fetch schedules
             $schedules = $court->schedules()
                 ->whereIn('id', $scheduleIds)
                 ->where('is_active', true)
                 ->orderBy('start_time')
                 ->get();
 
-            // Phase 1.5: Validate promo code if provided
+            // Phase 1.5: Validate promo code
+            // Jika bookingSessionId = null (single atau backward compat): validasi di sini
+            // Jika bookingSessionId ada: promo sudah divalidasi di Controller, tidak perlu validasi ulang
             $promoData = null;
-            if ($promoCode) {
-                // Calculate total price first for promo validation
+            if ($promoCode && $bookingSessionId === null) {
                 $totalOriginalPrice = $schedules->sum('price');
                 $promoData = $this->promoCodeService->validateAndApply($promoCode, $totalOriginalPrice);
             }
 
-            // Phase 2: Create reservations & payments
+            // Phase 2: Buat reservasi (tanpa payment individual)
             $reservations = [];
             $totalSlots = count($schedules);
-
-            // If promo is applied, distribute discount proportionally across slots
             $remainingDiscount = $promoData ? $promoData['discount'] : 0;
 
             foreach ($schedules as $index => $schedule) {
@@ -230,10 +279,8 @@ class ReservationService extends BaseService
 
                 if ($promoData && $remainingDiscount > 0) {
                     if ($index === $totalSlots - 1) {
-                        // Last slot gets the remaining discount to avoid rounding issues
                         $slotDiscount = min($remainingDiscount, $originalPrice);
                     } else {
-                        // Distribute proportionally
                         $totalOriginalPrice = $schedules->sum('price');
                         $slotDiscount = (int) floor($promoData['discount'] * $originalPrice / $totalOriginalPrice);
                         $slotDiscount = min($slotDiscount, $originalPrice, $remainingDiscount);
@@ -244,18 +291,18 @@ class ReservationService extends BaseService
                 $finalPrice = $originalPrice - $slotDiscount;
 
                 $reservationData = [
-                    'user_id'        => $userId,
-                    'court_id'       => $court->id,
-                    'date'           => $date,
-                    'start_time'     => $schedule->start_time,
-                    'end_time'       => $schedule->end_time,
-                    'duration_hours' => $durationHours,
-                    'total_price'    => $finalPrice,
-                    'status'         => 'pending',
-                    'notes'          => $notes,
+                    'user_id'            => $userId,
+                    'court_id'           => $court->id,
+                    'date'               => $date,
+                    'start_time'         => $schedule->start_time,
+                    'end_time'           => $schedule->end_time,
+                    'duration_hours'     => $durationHours,
+                    'total_price'        => $finalPrice,
+                    'status'             => 'pending',
+                    'notes'              => $notes,
+                    'booking_session_id' => $bookingSessionId,
                 ];
 
-                // Add promo data if applicable
                 if ($promoData && $slotDiscount > 0) {
                     $reservationData['promo_code_id']  = $promoData['promo']->id;
                     $reservationData['original_price'] = $originalPrice;
@@ -264,19 +311,36 @@ class ReservationService extends BaseService
 
                 $reservation = $this->repository->create($reservationData);
 
-                $reservation->payment()->create([
-                    'amount'         => $finalPrice,
-                    'payment_method' => $paymentMethod,
-                    'status'         => 'pending',
-                ]);
-
-                // Dispatch queued job to auto-expire reservation after configured expiry time
+                // Dispatch job expire hanya jika ini adalah group dengan session payment aktif
                 ExpireReservationJob::dispatch($reservation)->delay(now()->addMinutes(config('reservation.expiry_minutes')));
 
                 $reservations[] = $reservation;
             }
 
-            // Increment promo usage count
+            // Phase 3: Buat SATU Payment untuk seluruh sesi (hanya di grup terakhir)
+            if ($isLastGroup && $bookingSessionId) {
+                Payment::create([
+                    'reservation_id'     => $reservations[0]->id, // Linked ke reservasi pertama dalam sesi ini
+                    'booking_session_id' => $bookingSessionId,
+                    'amount'             => $sessionTotalPrice ?: array_sum(array_column(
+                        array_map(fn($r) => ['total_price' => $r->total_price], $reservations),
+                        'total_price'
+                    )),
+                    'payment_method'     => $paymentMethod,
+                    'status'             => 'pending',
+                ]);
+            } elseif ($isLastGroup && !$bookingSessionId) {
+                // Fallback: single booking tanpa session (backward compatible)
+                foreach ($reservations as $reservation) {
+                    $reservation->payment()->create([
+                        'amount'         => $reservation->total_price,
+                        'payment_method' => $paymentMethod,
+                        'status'         => 'pending',
+                    ]);
+                }
+            }
+
+            // Increment promo usage
             if ($promoData) {
                 $this->promoCodeService->incrementUsage($promoData['promo']);
             }
@@ -321,15 +385,18 @@ class ReservationService extends BaseService
     }
 
     /**
-     * Upload payment proof for a reservation.
+     * Upload payment proof untuk satu reservasi atau seluruh sesi booking.
+     * Jika reservasi memiliki booking_session_id, upload ke payment sesi.
      */
     public function uploadPaymentProof(Reservation $reservation, string $proofPath): void
     {
-        if (!$reservation->payment) {
+        $payment = $reservation->sessionPayment();
+
+        if (!$payment) {
             throw new InvalidArgumentException("Data pembayaran tidak ditemukan.");
         }
 
-        $reservation->payment->update([
+        $payment->update([
             'payment_proof' => $proofPath,
         ]);
     }

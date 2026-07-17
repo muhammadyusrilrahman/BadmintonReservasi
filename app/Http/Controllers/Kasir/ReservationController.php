@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Kasir;
 
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\Reservation\StoreAdminReservationRequest;
+use App\Models\Court;
+use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\User;
-use App\Models\Court;
 use App\Services\ReservationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,31 +21,11 @@ class ReservationController extends BaseController
     }
 
     /**
-     * List all reservations.
-     */
-    public function index(Request $request): View
-    {
-        $reservations = $this->reservationService->getPaginatedFiltered(
-            perPage: 15,
-            search:  $request->string('search')->trim()->value() ?: null,
-            date:    $request->input('date') ?: null,
-            status:  $request->input('status') ?: null,
-            courtId: $request->input('court_id') ? (int) $request->input('court_id') : null,
-        );
-
-        return view('admin.reservations.index', [
-            'title'        => 'Kelola Reservasi',
-            'reservations' => $reservations,
-            'courts'       => Court::active()->orderBy('name')->get(),
-        ]);
-    }
-
-    /**
-     * Show offline booking form.
+     * Form tambah reservasi manual (kasir).
      */
     public function create(): View
     {
-        return view('admin.reservations.create', [
+        return view('kasir.reservations.create', [
             'title'  => 'Tambah Reservasi Manual',
             'users'  => User::orderBy('name')->get(),
             'courts' => Court::active()->orderBy('name')->get(),
@@ -52,20 +33,20 @@ class ReservationController extends BaseController
     }
 
     /**
-     * Store offline booking.
+     * Simpan reservasi manual (kasir) — status langsung confirmed, lunas tunai.
      */
     public function store(StoreAdminReservationRequest $request): RedirectResponse
     {
         try {
             $this->reservationService->createAdminOfflineBooking($request->validated());
-            return $this->redirectWithSuccess('admin.reservations.index', 'Reservasi manual berhasil dibuat. Status pembayaran otomatis Lunas (Tunai).');
+            return $this->redirectWithSuccess('kasir.today.index', 'Reservasi manual berhasil dibuat. Status pembayaran otomatis Lunas (Tunai).');
         } catch (Exception $e) {
             return $this->backWithError($e->getMessage())->withInput();
         }
     }
 
     /**
-     * Show reservation details and payment verification.
+     * Detail reservasi + tombol konfirmasi pembayaran (kasir).
      */
     public function show(Reservation $reservation): View
     {
@@ -76,18 +57,18 @@ class ReservationController extends BaseController
         $sessionPayment = null;
 
         if ($reservation->booking_session_id) {
-            $sessionReservations = \App\Models\Reservation::where('booking_session_id', $reservation->booking_session_id)
+            $sessionReservations = Reservation::where('booking_session_id', $reservation->booking_session_id)
                 ->with(['court'])
                 ->orderBy('date')
                 ->orderBy('start_time')
                 ->get();
 
-            $sessionPayment = \App\Models\Payment::where('booking_session_id', $reservation->booking_session_id)
+            $sessionPayment = Payment::where('booking_session_id', $reservation->booking_session_id)
                 ->with(['verifiedBy'])
                 ->first();
         }
 
-        return view('admin.reservations.show', [
+        return view('kasir.reservations.show', [
             'title'               => 'Detail Reservasi #' . $reservation->id,
             'reservation'         => $reservation,
             'sessionReservations' => $sessionReservations,
@@ -96,7 +77,8 @@ class ReservationController extends BaseController
     }
 
     /**
-     * Verify payment.
+     * Verifikasi pembayaran oleh kasir.
+     * Jika ada booking_session_id, semua reservasi dalam sesi dikonfirmasi sekaligus.
      */
     public function verifyPayment(Request $request, Reservation $reservation): RedirectResponse
     {
@@ -104,25 +86,12 @@ class ReservationController extends BaseController
 
         try {
             $this->reservationService->verifyPayment($reservation, $request->input('status'));
-            
-            $msg = $request->input('status') === 'paid' 
-                ? 'Pembayaran berhasil diverifikasi. Pesanan dikonfirmasi.' 
-                : 'Pembayaran ditolak. Pesanan dibatalkan.';
-                
-            return $this->redirectWithSuccess('admin.reservations.show', $msg, $reservation);
-        } catch (Exception $e) {
-            return $this->backWithError($e->getMessage());
-        }
-    }
 
-    /**
-     * Cancel reservation manually.
-     */
-    public function cancel(Request $request, Reservation $reservation): RedirectResponse
-    {
-        try {
-            $this->reservationService->cancelReservation($reservation);
-            return $this->redirectWithSuccess('admin.reservations.show', 'Reservasi berhasil dibatalkan.', $reservation);
+            $msg = $request->input('status') === 'paid'
+                ? 'Pembayaran berhasil diverifikasi. Pesanan dikonfirmasi.'
+                : 'Pembayaran ditolak. Pesanan dibatalkan.';
+
+            return $this->redirectWithSuccess('kasir.reservations.show', $msg, $reservation);
         } catch (Exception $e) {
             return $this->backWithError($e->getMessage());
         }

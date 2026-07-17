@@ -5,6 +5,11 @@
             <h1 class="text-2xl font-bold text-slate-800 dark:text-white">{{ $title }} 📅</h1>
             <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ \Carbon\Carbon::today()->format('l, d F Y') }}</p>
         </div>
+        <a href="{{ route('kasir.reservations.create') }}"
+           class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#e91e8c] text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-pink-500/25 hover:-translate-y-0.5 transition-all duration-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Tambah Reservasi
+        </a>
     </div>
 
     {{-- Stats --}}
@@ -90,15 +95,19 @@
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                         @foreach($reservations as $res)
                         @php
-                            $paymentStatusStyle = match($res->payment?->status) {
+                            // Cek session payment jika ada, fallback ke direct payment
+                            $resPmt = $res->booking_session_id
+                                ? \App\Models\Payment::where('booking_session_id', $res->booking_session_id)->first()
+                                : $res->payment;
+                            $paymentStatusStyle = match($resPmt?->status) {
                                 'paid' => 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10',
                                 'pending' => 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10',
                                 'failed' => 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10',
                                 default => 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800',
                             };
-                            $paymentLabel = $res->payment ? $res->payment->status_label : 'Belum Ada';
+                            $paymentLabel = $resPmt ? $resPmt->status_label : 'Belum Ada';
                         @endphp
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                        <tr onclick="window.location='{{ route('kasir.reservations.show', $res) }}'" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer">
                             <td class="px-5 py-4">
                                 <span class="font-bold text-slate-800 dark:text-white">{{ \Carbon\Carbon::parse($res->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($res->end_time)->format('H:i') }}</span>
                             </td>

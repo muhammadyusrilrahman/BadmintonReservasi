@@ -33,28 +33,43 @@ class SimulatePaymentSuccess extends Command
         $reservationId = $this->argument('reservation_id');
 
         if (!$reservationId) {
-            // Fetch pending reservations
-            $pendingReservations = Reservation::where('status', 'pending')
-                ->whereHas('payment', function ($query) {
-                    $query->where('status', 'pending');
-                })
+            // Cari semua PAYMENT yang masih pending
+            // Ini lebih reliable daripada cari dari Reservation karena session payment
+            // hanya terhubung ke reservasi pertama via reservation_id
+            $pendingPayments = Payment::where('status', 'pending')
+                ->with(['reservation.user', 'reservation.court'])
+                ->orderByDesc('created_at')
                 ->get();
 
-            if ($pendingReservations->isEmpty()) {
-                $this->error('Tidak ada reservasi pending dengan status pembayaran pending yang ditemukan.');
+            if ($pendingPayments->isEmpty()) {
+                $this->error('Tidak ada pembayaran pending yang ditemukan.');
                 return Command::FAILURE;
             }
 
-            $choices = $pendingReservations->map(function ($res) {
-                $user = $res->user ? $res->user->name : 'N/A';
-                $court = $res->court ? $res->court->name : 'N/A';
-                $date = $res->date->format('Y-m-d');
-                $amount = $res->payment ? number_format($res->payment->amount, 0, ',', '.') : '0';
-                return "[ID: {$res->id}] {$user} - {$court} ({$date}) - Rp {$amount}";
-            })->toArray();
+            $choices = $pendingPayments->map(function ($pmt) {
+                $res = $pmt->reservation;
+                if (!$res) return null;
 
-            $choice = $this->choice('Pilih reservasi yang ingin disimulasikan berhasil pembayarannya:', $choices);
-            
+                $user  = $res->user?->name ?? 'N/A';
+                $court = $res->court?->name ?? 'N/A';
+                $date  = $res->date->format('Y-m-d');
+                $amount = number_format($pmt->amount, 0, ',', '.');
+
+                if ($pmt->booking_session_id) {
+                    $slotCount = \App\Models\Reservation::where('booking_session_id', $pmt->booking_session_id)->count();
+                    return "[ID: {$res->id}] {$user} - {$court} ({$date}) - {$slotCount} slot - Rp {$amount}";
+                }
+
+                return "[ID: {$res->id}] {$user} - {$court} ({$date}) - Rp {$amount}";
+            })->filter()->values()->toArray();
+
+            if (empty($choices)) {
+                $this->error('Tidak ada reservasi valid yang bisa disimulasikan.');
+                return Command::FAILURE;
+            }
+
+            $choice = $this->choice('Pilih pembayaran yang ingin disimulasikan berhasil:', $choices);
+
             // Parse ID from choice string, e.g., "[ID: 15] Name - Court ..."
             preg_match('/\[ID:\s*(\d+)\]/', $choice, $matches);
             $reservationId = (int) $matches[1];
@@ -67,7 +82,13 @@ class SimulatePaymentSuccess extends Command
             return Command::FAILURE;
         }
 
-        $payment = $reservation->payment;
+        // Temukan payment: session payment atau direct payment
+        $payment = null;
+        if ($reservation->booking_session_id) {
+            $payment = Payment::where('booking_session_id', $reservation->booking_session_id)->first();
+        } else {
+            $payment = $reservation->payment;
+        }
 
         if (!$payment) {
             $this->error("Reservasi #{$reservationId} tidak memiliki data pembayaran.");
@@ -79,32 +100,38 @@ class SimulatePaymentSuccess extends Command
             return Command::SUCCESS;
         }
 
+        // Ambil semua reservasi dalam sesi
+        $reservationsToUpdate = $reservation->booking_session_id
+            ? Reservation::where('booking_session_id', $reservation->booking_session_id)->get()
+            : collect([$reservation]);
+
         $this->info("Mensimulasikan pembayaran sukses untuk Reservasi #{$reservationId}...");
+        if ($reservationsToUpdate->count() > 1) {
+            $this->info("Sesi booking ini mencakup {$reservationsToUpdate->count()} slot reservasi.");
+        }
 
         try {
-            DB::transaction(function () use ($reservation, $payment, $notificationService) {
-                // Lock records
-                $lockedRes = Reservation::where('id', $reservation->id)->lockForUpdate()->first();
+            DB::transaction(function () use ($payment, $reservationsToUpdate, $notificationService) {
+                // Lock dan update payment
                 $lockedPmt = Payment::where('id', $payment->id)->lockForUpdate()->first();
 
-                // Update payment status
                 $lockedPmt->update([
-                    'status' => 'paid',
-                    'payment_type' => 'credit_card', // simulated
+                    'status'                  => 'paid',
+                    'payment_type'            => 'credit_card', // simulated
                     'midtrans_transaction_id' => 'SIM-TX-' . strtoupper(bin2hex(random_bytes(6))),
-                    'paid_at' => now(),
+                    'paid_at'                 => now(),
                 ]);
 
-                // Update reservation status
-                $lockedRes->update([
-                    'status' => 'confirmed',
-                ]);
-
-                // Fire notification
-                $notificationService->sendPaymentSuccess($lockedRes);
+                // Update semua reservasi dalam sesi
+                foreach ($reservationsToUpdate as $res) {
+                    $lockedRes = Reservation::where('id', $res->id)->lockForUpdate()->first();
+                    $lockedRes->update(['status' => 'confirmed']);
+                    $notificationService->sendPaymentSuccess($lockedRes);
+                }
             });
 
-            $this->info("✅ Berhasil! Status pembayaran reservasi #{$reservationId} telah diubah menjadi 'paid' dan status reservasi menjadi 'confirmed'.");
+            $count = $reservationsToUpdate->count();
+            $this->info("✅ Berhasil! {$count} reservasi telah dikonfirmasi dengan status 'paid'.");
             $this->info("📧 Email notifikasi pembayaran sukses telah dikirimkan ke customer.");
 
             return Command::SUCCESS;

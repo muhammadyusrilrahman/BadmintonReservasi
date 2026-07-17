@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['user_id', 'court_id', 'date', 'start_time', 'end_time', 'duration_hours', 'total_price', 'status', 'notes', 'booking_code', 'checked_in_at', 'checked_in_by', 'reschedule_count', 'promo_code_id', 'original_price', 'discount_amount'])]
+#[Fillable(['user_id', 'court_id', 'date', 'start_time', 'end_time', 'duration_hours', 'total_price', 'status', 'notes', 'booking_code', 'checked_in_at', 'checked_in_by', 'reschedule_count', 'promo_code_id', 'original_price', 'discount_amount', 'booking_session_id'])]
 class Reservation extends Model
 {
     use LogsActivity;
@@ -78,6 +78,28 @@ class Reservation extends Model
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
+    }
+
+    /**
+     * Payment yang mewakili seluruh sesi booking (booking_session_id).
+     * Mengembalikan payment pertama yang linked ke session yang sama.
+     */
+    public function sessionPayment(): ?Payment
+    {
+        if (!$this->booking_session_id) {
+            return $this->payment;
+        }
+
+        return Payment::where('booking_session_id', $this->booking_session_id)
+            ->first();
+    }
+
+    /**
+     * Semua reservasi dalam sesi booking yang sama.
+     */
+    public function sessionReservations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(static::class, 'booking_session_id', 'booking_session_id');
     }
 
     /**

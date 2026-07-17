@@ -15,6 +15,16 @@
             Tambah Promo
         </a>
         @endif
+        {{-- [HIDDEN] Tombol Tambah Promo untuk kasir — hapus komentar di bawah untuk menampilkan --}}
+        {{-- @if(auth()->user()->roles->first()?->name === 'kasir')
+        <a href="{{ route('kasir.promos.create') }}"
+           class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#1e3a5f] to-[#e91e8c] text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-pink-500/25 hover:-translate-y-0.5 transition-all duration-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Tambah Promo
+        </a>
+        @endif --}}
     </div>
 
     {{-- Filter Bar --}}

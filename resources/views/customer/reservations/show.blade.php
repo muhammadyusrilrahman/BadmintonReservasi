@@ -40,36 +40,79 @@
                 </div>
             </div>
 
-            {{-- Order Detail Card --}}
+        {{-- Order Detail Card --}}
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                     <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                         <svg class="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         Rincian Pesanan
+                        @if($sessionReservations->count() > 1)
+                            <span class="ml-auto text-xs font-medium bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 px-2.5 py-1 rounded-full">
+                                {{ $sessionReservations->count() }} Slot · 1 Tagihan
+                            </span>
+                        @endif
                     </h2>
                 </div>
                 <div class="p-6">
-                    <div class="grid grid-cols-2 gap-y-6 gap-x-4">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Lapangan</p>
-                            <p class="text-sm font-medium text-slate-800 dark:text-white">{{ $reservation->court->name }}</p>
-                            <p class="text-xs text-slate-500">{{ $reservation->court->type_label }}</p>
+                    @if($sessionReservations->count() > 1)
+                        {{-- Tampilkan semua slot dalam sesi --}}
+                        <div class="space-y-3">
+                            @foreach($sessionReservations as $sesRes)
+                                <div class="flex items-start gap-3 p-3 rounded-xl {{ $sesRes->id === $reservation->id ? 'bg-pink-50/60 dark:bg-pink-500/5 border border-pink-100 dark:border-pink-500/20' : 'bg-slate-50 dark:bg-slate-800/50' }}">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1e3a5f] to-[#e91e8c] flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                            {{ $sesRes->court->name }}
+                                            @if($sesRes->id === $reservation->id)
+                                                <span class="ml-1 text-[10px] text-pink-500">(ini)</span>
+                                            @endif
+                                        </p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">
+                                            {{ $sesRes->date->translatedFormat('l, d F Y') }}
+                                            · {{ \Carbon\Carbon::parse($sesRes->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($sesRes->end_time)->format('H:i') }}
+                                        </p>
+                                    </div>
+                                    <div class="text-right flex-shrink-0">
+                                        <p class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ $sesRes->formatted_total_price }}</p>
+                                        <span class="text-[10px] text-{{ $sesRes->status_color }}-600 dark:text-{{ $sesRes->status_color }}-400">{{ $sesRes->status_label }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            {{-- Total Sesi --}}
+                            <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                                <p class="text-sm font-semibold text-slate-600 dark:text-slate-400">Total Semua Slot</p>
+                                <p class="text-base font-extrabold text-slate-800 dark:text-white">
+                                    Rp {{ number_format($sessionReservations->sum('total_price'), 0, ',', '.') }}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tanggal Main</p>
-                            <p class="text-sm font-medium text-slate-800 dark:text-white">{{ $reservation->date->translatedFormat('l, d F Y') }}</p>
+                    @else
+                        {{-- Tampilan single slot seperti sebelumnya --}}
+                        <div class="grid grid-cols-2 gap-y-6 gap-x-4">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Lapangan</p>
+                                <p class="text-sm font-medium text-slate-800 dark:text-white">{{ $reservation->court->name }}</p>
+                                <p class="text-xs text-slate-500">{{ $reservation->court->type_label }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tanggal Main</p>
+                                <p class="text-sm font-medium text-slate-800 dark:text-white">{{ $reservation->date->translatedFormat('l, d F Y') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Waktu</p>
+                                <p class="text-sm font-medium text-slate-800 dark:text-white">
+                                    {{ \Carbon\Carbon::parse($reservation->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($reservation->end_time)->format('H:i') }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Durasi</p>
+                                <p class="text-sm font-medium text-slate-800 dark:text-white">{{ $reservation->duration_hours }} Jam</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Waktu</p>
-                            <p class="text-sm font-medium text-slate-800 dark:text-white">
-                                {{ \Carbon\Carbon::parse($reservation->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($reservation->end_time)->format('H:i') }}
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Durasi</p>
-                            <p class="text-sm font-medium text-slate-800 dark:text-white">{{ $reservation->duration_hours }} Jam</p>
-                        </div>
-                    </div>
+                    @endif
 
                     @if($reservation->notes)
                         <div class="mt-6 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
@@ -89,42 +132,59 @@
                     <h2 class="text-lg font-bold text-white flex items-center gap-2">
                         <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         Pembayaran
+                        @if($sessionReservations->count() > 1)
+                            <span class="ml-auto text-xs font-normal bg-white/20 px-2 py-0.5 rounded-full">1 Tagihan Gabungan</span>
+                        @endif
                     </h2>
                 </div>
                 <div class="p-6">
+                    @php
+                        // Gunakan sessionPayment jika ada, fallback ke payment reservasi ini
+                        $activePayment = $sessionPayment ?? $reservation->payment;
+                        $totalTagihan = $sessionReservations->count() > 1
+                            ? $sessionReservations->sum('total_price')
+                            : $reservation->total_price;
+                    @endphp
                     <div class="flex items-center justify-between mb-6">
-                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Tagihan</p>
-                        <p class="text-xl font-extrabold text-slate-800 dark:text-white">{{ $reservation->formatted_total_price }}</p>
+                        <div>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Tagihan</p>
+                            @if($sessionReservations->count() > 1)
+                                <p class="text-[10px] text-slate-400 dark:text-slate-500">{{ $sessionReservations->count() }} slot digabung</p>
+                            @endif
+                        </div>
+                        <p class="text-xl font-extrabold text-slate-800 dark:text-white">
+                            Rp {{ number_format($totalTagihan, 0, ',', '.') }}
+                        </p>
                     </div>
 
-                    @if($reservation->payment)
+                    @if($activePayment)
                         <div class="space-y-4 mb-6">
                             <div class="flex justify-between items-center text-sm">
                                 <span class="text-slate-500 dark:text-slate-400">Metode Pembayaran</span>
                                 <span class="font-semibold text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
-                                    @if($reservation->payment->payment_type)
-                                        {{ $reservation->payment->method_label }}
+                                    @if($activePayment->payment_type)
+                                        {{ $activePayment->method_label }}
                                     @else
                                         Midtrans Snap Gateway
                                     @endif
                                 </span>
                             </div>
-                            @if($reservation->payment->midtrans_transaction_id)
+                            @if($activePayment->midtrans_transaction_id)
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="text-slate-500 dark:text-slate-400">ID Transaksi</span>
-                                    <span class="font-mono text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/50 px-2 py-1 rounded-md">{{ $reservation->payment->midtrans_transaction_id }}</span>
+                                    <span class="font-mono text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/50 px-2 py-1 rounded-md">{{ $activePayment->midtrans_transaction_id }}</span>
                                 </div>
                             @endif
-                            @if($reservation->payment->paid_at)
+                            @if($activePayment->paid_at)
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="text-slate-500 dark:text-slate-400">Waktu Bayar</span>
-                                    <span class="font-medium text-slate-800 dark:text-white">{{ $reservation->payment->paid_at->translatedFormat('d M Y H:i') }} WIB</span>
+                                    <span class="font-medium text-slate-800 dark:text-white">{{ $activePayment->paid_at->translatedFormat('d M Y H:i') }} WIB</span>
                                 </div>
                             @endif
                             <div class="flex justify-between items-center text-sm">
                                 <span class="text-slate-500 dark:text-slate-400">Status Transaksi</span>
                                 @php
-                                    $pColor = match($reservation->payment->status) {
+                                    $pColor = match($activePayment->status) {
                                         'paid' => 'emerald',
                                         'failed' => 'red',
                                         'refunded' => 'slate',
@@ -132,12 +192,12 @@
                                     };
                                 @endphp
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-{{ $pColor }}-50 dark:bg-{{ $pColor }}-500/10 text-{{ $pColor }}-600 dark:text-{{ $pColor }}-400 uppercase tracking-wider">
-                                    {{ $reservation->payment->status_label }}
+                                    {{ $activePayment->status_label }}
                                 </span>
                             </div>
                         </div>
 
-                        @if($reservation->payment->status === 'pending')
+                        @if($activePayment->status === 'pending')
                             {{-- Info Box --}}
                             <div class="p-4 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 rounded-xl mb-6 text-center">
                                 <svg class="w-6 h-6 text-amber-500 mx-auto mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -155,9 +215,12 @@
                                 <span id="pay-text" class="flex items-center gap-2">
                                     <svg class="w-5 h-5 text-white/80 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                     Bayar Sekarang
+                                    @if($sessionReservations->count() > 1)
+                                        ({{ $sessionReservations->count() }} Slot)
+                                    @endif
                                 </span>
                             </button>
-                        @elseif($reservation->payment->status === 'paid')
+                        @elseif($activePayment->status === 'paid')
                             <div class="p-5 bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-center">
                                 <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                     <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -222,6 +285,7 @@
             </div>
         </div>
     </div>
+
 
     {{-- QR Code Section (hanya tampil saat confirmed) --}}
     @if($reservation->status === 'confirmed')
@@ -360,7 +424,8 @@
         </div>
     @endif
 
-    @if($reservation->payment && $reservation->payment->status === 'pending')
+    @php $activePaymentForScript = $sessionPayment ?? $reservation->payment; @endphp
+    @if($activePaymentForScript && $activePaymentForScript->status === 'pending')
 
         @push('scripts')
             <script src="https://app.{{ config('services.midtrans.is_production') ? '' : 'sandbox.' }}midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>

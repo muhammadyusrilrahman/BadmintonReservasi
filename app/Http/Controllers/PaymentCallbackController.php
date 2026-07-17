@@ -132,19 +132,25 @@ class PaymentCallbackController extends Controller
 
                 $payment->update($paymentUpdateData);
 
-                // Update Reservation attributes
-                $reservation->update([
-                    'status' => $reservationStatus,
-                ]);
+                // Cari semua reservasi dalam sesi (jika pakai booking_session_id) atau fallback ke 1 reservasi
+                $reservationsToUpdate = $payment->booking_session_id
+                    ? Reservation::where('booking_session_id', $payment->booking_session_id)
+                        ->lockForUpdate()
+                        ->get()
+                    : collect([$reservation]);
 
-                // Send Notification
-                if ($paymentStatus === 'paid') {
-                    $this->notificationService->sendPaymentSuccess($reservation);
-                } elseif ($paymentStatus === 'failed') {
-                    $this->notificationService->sendPaymentFailed($reservation);
+                // Update status semua reservasi dalam sesi
+                foreach ($reservationsToUpdate as $res) {
+                    $res->update(['status' => $reservationStatus]);
+
+                    if ($paymentStatus === 'paid') {
+                        $this->notificationService->sendPaymentSuccess($res);
+                    } elseif ($paymentStatus === 'failed') {
+                        $this->notificationService->sendPaymentFailed($res);
+                    }
                 }
 
-                Log::info("Midtrans Webhook: Berhasil sinkronisasi status pembayaran #{$paymentId} menjadi {$paymentStatus} dan reservasi #{$reservationId} menjadi {$reservationStatus}.");
+                Log::info("Midtrans Webhook: Payment #{$paymentId} → {$paymentStatus}. {$reservationsToUpdate->count()} reservasi diperbarui ke {$reservationStatus}.");
             });
 
             return response()->json([

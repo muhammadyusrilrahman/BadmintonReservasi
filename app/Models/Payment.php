@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['reservation_id', 'amount', 'payment_method', 'payment_proof', 'status', 'paid_at', 'verified_by', 'verified_at', 'snap_token', 'midtrans_transaction_id', 'payment_type'])]
+#[Fillable(['reservation_id', 'booking_session_id', 'amount', 'payment_method', 'payment_proof', 'status', 'paid_at', 'verified_by', 'verified_at', 'snap_token', 'midtrans_transaction_id', 'payment_type'])]
 /**
  * Payment Model — Mewakili data pembayaran untuk sebuah reservasi.
  *
@@ -72,6 +72,14 @@ class Payment extends Model
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    /**
+     * Semua reservasi dalam sesi booking yang sama (jika payment ini adalah payment sesi).
+     */
+    public function sessionReservations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Reservation::class, 'booking_session_id', 'booking_session_id');
     }
 
     // ──────────────────────────────────────

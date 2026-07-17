@@ -47,7 +47,15 @@ class CancelExpiredReservations extends Command
                             return;
                         }
 
-                        $payment = $lockedReservation->payment()->lockForUpdate()->first();
+                        // Temukan payment: session payment (via booking_session_id) atau direct
+                        $payment = null;
+                        if ($lockedReservation->booking_session_id) {
+                            $payment = \App\Models\Payment::where('booking_session_id', $lockedReservation->booking_session_id)
+                                ->lockForUpdate()
+                                ->first();
+                        } else {
+                            $payment = $lockedReservation->payment()->lockForUpdate()->first();
+                        }
 
                         if ($payment && $payment->status === 'pending') {
                             $reservationService->cancelReservation($lockedReservation);

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Exception;
 use App\Services\PromoCodeService;
+use Illuminate\Support\Str;
 
 class ReservationController extends BaseController
 {
@@ -53,6 +54,8 @@ class ReservationController extends BaseController
 
     /**
      * Process multi-day multi-slot booking.
+     * Semua reservasi dari 1 sesi ini diberi booking_session_id yang sama,
+     * dan hanya 1 Payment tunggal yang dibuat (total semua slot).
      */
     public function store(Request $request): RedirectResponse
     {
@@ -75,17 +78,62 @@ class ReservationController extends BaseController
         ]);
 
         try {
-            $totalReservations = 0;
+            // Generate 1 booking_session_id untuk seluruh sesi pemesanan ini
+            $bookingSessionId = (string) Str::uuid();
 
+            // Hitung total harga semua slot (diperlukan untuk payment tunggal)
+            // Kita perlu pre-calculate harga sebelum buat reservasi
+            $court = Court::with(['schedules'])->findOrFail($request->court_id);
+            $allScheduleIds = [];
             foreach ($request->bookings as $booking) {
+                foreach ($booking['schedule_ids'] as $sid) {
+                    $allScheduleIds[] = $sid;
+                }
+            }
+
+            $allSchedules = $court->schedules()
+                ->whereIn('id', $allScheduleIds)
+                ->where('is_active', true)
+                ->get();
+
+            // Hitung total original price seluruh sesi
+            $sessionOriginalTotal = $allSchedules->sum('price');
+
+            // Hitung diskon promo jika ada
+            $sessionDiscount = 0;
+            if ($request->promo_code) {
+                try {
+                    $promoResult = $this->promoCodeService->validateAndApply(
+                        $request->promo_code,
+                        $sessionOriginalTotal
+                    );
+                    $sessionDiscount = $promoResult['discount'];
+                } catch (Exception $e) {
+                    return $this->backWithError($e->getMessage())->withInput();
+                }
+            }
+
+            $sessionTotalPrice = $sessionOriginalTotal - $sessionDiscount;
+
+            // Buat reservasi per hari, 1 payment di hari terakhir
+            $totalReservations = 0;
+            $bookings = $request->bookings;
+            $dayCount = count($bookings);
+
+            foreach ($bookings as $index => $booking) {
+                $isLastGroup = ($index === $dayCount - 1);
+
                 $reservations = $this->reservationService->createCustomerBooking(
-                    scheduleIds: $booking['schedule_ids'],
-                    userId: auth()->id(),
-                    date: $booking['date'],
-                    courtId: (int) $request->court_id,
-                    paymentMethod: $request->payment_method,
-                    notes: $request->notes,
-                    promoCode: $request->promo_code,
+                    scheduleIds:       $booking['schedule_ids'],
+                    userId:            auth()->id(),
+                    date:              $booking['date'],
+                    courtId:           (int) $request->court_id,
+                    paymentMethod:     $request->payment_method,
+                    notes:             $request->notes,
+                    promoCode:         $request->promo_code,
+                    bookingSessionId:  $bookingSessionId,
+                    isLastGroup:       $isLastGroup,
+                    sessionTotalPrice: $isLastGroup ? $sessionTotalPrice : 0,
                 );
 
                 foreach ($reservations as $reservation) {
@@ -95,7 +143,6 @@ class ReservationController extends BaseController
                 $totalReservations += count($reservations);
             }
 
-            $dayCount = count($request->bookings);
             $msg = "Berhasil memesan {$totalReservations} slot";
             if ($dayCount > 1) {
                 $msg .= " di {$dayCount} hari";
@@ -130,6 +177,7 @@ class ReservationController extends BaseController
 
     /**
      * Show reservation detail.
+     * Jika reservasi memiliki booking_session_id, muat juga semua sibling reservasi dalam sesi.
      */
     public function show(Reservation $reservation): View
     {
@@ -138,11 +186,28 @@ class ReservationController extends BaseController
             abort(403);
         }
 
-        $reservation->load(['court', 'payment']);
+        $reservation->load(['court', 'payment', 'refund', 'review']);
+
+        // Muat semua reservasi dalam sesi booking yang sama (jika ada)
+        $sessionReservations = collect();
+        $sessionPayment = null;
+
+        if ($reservation->booking_session_id) {
+            $sessionReservations = Reservation::where('booking_session_id', $reservation->booking_session_id)
+                ->with(['court'])
+                ->orderBy('date')
+                ->orderBy('start_time')
+                ->get();
+
+            $sessionPayment = \App\Models\Payment::where('booking_session_id', $reservation->booking_session_id)
+                ->first();
+        }
 
         return view('customer.reservations.show', [
-            'title'       => 'Detail Reservasi #' . $reservation->id,
-            'reservation' => $reservation,
+            'title'              => 'Detail Reservasi #' . $reservation->id,
+            'reservation'        => $reservation,
+            'sessionReservations' => $sessionReservations,
+            'sessionPayment'     => $sessionPayment,
         ]);
     }
 
