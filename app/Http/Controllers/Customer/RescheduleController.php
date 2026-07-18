@@ -19,7 +19,7 @@ class RescheduleController extends BaseController
     /**
      * Show reschedule form.
      */
-    public function show(Reservation $reservation): View
+    public function show(Reservation $reservation): View|RedirectResponse
     {
         // Ensure customer can only reschedule their own reservation
         if ($reservation->user_id !== auth()->id()) {
@@ -27,13 +27,37 @@ class RescheduleController extends BaseController
         }
 
         if (!$reservation->canReschedule()) {
-            abort(403, "Reservasi ini tidak dapat di-reschedule.");
+            return redirect()->route('customer.reservations.show', $reservation)
+                ->withError('Reservasi ini sudah tidak dapat di-reschedule (maksimal 1 kali atau batas waktu sudah lewat).');
         }
 
+        // Load session reservations jika ini bagian dari session booking
+        $sessionReservations = collect();
+        if ($reservation->booking_session_id) {
+            $sessionReservations = Reservation::where('booking_session_id', $reservation->booking_session_id)
+                ->orderBy('date')
+                ->orderBy('start_time')
+                ->get();
+        }
+
+        $sessionData = ($sessionReservations->count() > 0 ? $sessionReservations : collect([$reservation]))->map(function($r) {
+            return [
+                'id' => $r->id,
+                'original_date_ymd' => $r->date->format('Y-m-d'),
+                'formatted_original_date' => $r->date->translatedFormat('l, d F Y'),
+                'start_time' => $r->start_time,
+                'end_time' => $r->end_time,
+                'total_price' => $r->total_price,
+                'duration_hours' => $r->duration_hours
+            ];
+        });
+
         return view('customer.reschedule', [
-            'title'       => 'Reschedule Reservasi #' . $reservation->id,
-            'reservation' => $reservation,
-            'court'       => $reservation->court,
+            'title'               => 'Reschedule Reservasi #' . $reservation->id,
+            'reservation'         => $reservation,
+            'court'               => $reservation->court,
+            'sessionReservations' => $sessionReservations,
+            'sessionData'         => $sessionData,
         ]);
     }
 
@@ -47,21 +71,34 @@ class RescheduleController extends BaseController
         }
 
         $request->validate([
-            'date'         => ['required', 'date', 'after_or_equal:today'],
-            'schedule_ids' => ['required', 'array', 'min:1'],
-            'schedule_ids.*' => ['integer', 'exists:court_schedules,id'],
+            'reschedules' => ['required', 'array', 'min:1'],
+            'reschedules.*.reservation_id' => ['required', 'integer', 'exists:reservations,id'],
+            'reschedules.*.date' => ['required', 'date', 'after_or_equal:today'],
+            'reschedules.*.schedule_ids' => ['required', 'array', 'min:1'],
+            'reschedules.*.schedule_ids.*' => ['integer', 'exists:court_schedules,id'],
         ], [], [
-            'date'         => 'tanggal baru',
-            'schedule_ids' => 'jadwal slot baru',
+            'reschedules' => 'data reschedule',
+            'reschedules.*.date' => 'tanggal baru',
+            'reschedules.*.schedule_ids' => 'jadwal slot baru',
         ]);
 
         try {
-            $this->rescheduleService->reschedule(
-                reservation: $reservation,
-                newDate: $request->date,
-                newScheduleIds: $request->schedule_ids,
-                userId: auth()->id()
-            );
+            \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+                foreach ($request->input('reschedules') as $rescheduleData) {
+                    $targetReservation = Reservation::findOrFail($rescheduleData['reservation_id']);
+                    
+                    if ($targetReservation->user_id !== auth()->id()) {
+                        continue;
+                    }
+
+                    $this->rescheduleService->reschedule(
+                        reservation: $targetReservation,
+                        newDate: $rescheduleData['date'],
+                        newScheduleIds: $rescheduleData['schedule_ids'],
+                        userId: auth()->id()
+                    );
+                }
+            });
 
             return redirect()
                 ->route('customer.reservations.show', $reservation)

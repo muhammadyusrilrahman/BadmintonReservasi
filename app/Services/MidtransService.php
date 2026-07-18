@@ -38,6 +38,18 @@ class MidtransService
         $startTime = substr($payment->reservation->start_time, 0, 5);
         $endTime = substr($payment->reservation->end_time, 0, 5);
 
+        if ($payment->booking_session_id) {
+            $slotCount = \App\Models\Reservation::where('booking_session_id', $payment->booking_session_id)->count();
+            $itemName = "Sesi {$courtName} ({$dateFormatted}) - {$slotCount} Slot";
+        } else {
+            $itemName = "Booking {$courtName} ({$dateFormatted} {$startTime}-{$endTime})";
+        }
+
+        // Limit name to 50 characters (Midtrans requirement)
+        if (strlen($itemName) > 50) {
+            $itemName = substr($itemName, 0, 47) . '...';
+        }
+
         // Midtrans Snap API Payload
         $payload = [
             'transaction_details' => [
@@ -49,7 +61,7 @@ class MidtransService
                     'id' => 'court-' . $payment->reservation->court_id,
                     'price' => (int) $payment->amount,
                     'quantity' => 1,
-                    'name' => "Booking {$courtName} ({$dateFormatted} {$startTime}-{$endTime})",
+                    'name' => $itemName,
                 ]
             ],
             'customer_details' => [

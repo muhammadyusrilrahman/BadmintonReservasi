@@ -95,10 +95,20 @@ class RescheduleService extends BaseService
             ]);
 
             // If there's an associated payment, update its amount
-            if ($reservation->payment) {
-                $reservation->payment->update([
-                    'amount' => $newTotalPrice,
-                ]);
+            // Untuk session booking: payment terhubung via booking_session_id
+            $paymentToUpdate = $reservation->booking_session_id
+                ? $reservation->sessionPayment()
+                : $reservation->payment;
+
+            if ($paymentToUpdate) {
+                // Untuk session: hitung ulang total semua slot dalam sesi
+                if ($reservation->booking_session_id) {
+                    $sessionTotal = Reservation::where('booking_session_id', $reservation->booking_session_id)
+                        ->sum('total_price');
+                    $paymentToUpdate->update(['amount' => $sessionTotal]);
+                } else {
+                    $paymentToUpdate->update(['amount' => $newTotalPrice]);
+                }
             }
 
             // 4. Create ReservationStatusLog

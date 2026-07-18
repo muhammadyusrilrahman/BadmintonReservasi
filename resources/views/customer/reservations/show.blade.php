@@ -240,35 +240,58 @@
                                     @endif
 
                                     @if($reservation->canRequestRefund())
-                                        <button type="button" onclick="openRefundModal()" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 text-sm font-semibold rounded-xl transition-all duration-200 border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-800 active:scale-[0.98]">
+                                        <a href="{{ route('customer.reservations.refund.create', $reservation) }}" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 text-sm font-semibold rounded-xl transition-all duration-200 border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-800 active:scale-[0.98]">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H3m0 0l3-3m-3 3l3 3m9 14V5M9 21h6"/></svg>
-                                            Ajukan Pengembalian Dana (Refund)
-                                        </button>
+                                            Ajukan Refund
+                                        </a>
+                                        @if($sessionReservations->count() > 1)
+                                            <p class="text-[10px] text-slate-400 text-center px-2">Anda dapat melakukan refund pada beberapa slot sekaligus melalui halaman pengajuan refund.</p>
+                                        @endif
                                     @endif
                                 </div>
                             @endif
 
                             {{-- Refund active tracking --}}
-                            @if($reservation->refund)
-                                <div class="mt-4 p-4 bg-{{ $reservation->refund->status_color }}-50 dark:bg-{{ $reservation->refund->status_color }}-500/5 border border-{{ $reservation->refund->status_color }}-200 dark:border-{{ $reservation->refund->status_color }}-500/20 rounded-xl text-left">
-                                    <p class="text-xs font-bold text-{{ $reservation->refund->status_color }}-800 dark:text-{{ $reservation->refund->status_color }}-400 uppercase tracking-wider mb-2">Tracking Refund</p>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-{{ $reservation->refund->status_color }}-100 dark:bg-{{ $reservation->refund->status_color }}-500/20 text-{{ $reservation->refund->status_color }}-800 dark:text-{{ $reservation->refund->status_color }}-300 uppercase tracking-wider">
-                                            {{ $reservation->refund->status_label }}
-                                        </span>
-                                        <span class="text-[10px] text-slate-500">{{ $reservation->refund->created_at->translatedFormat('d M Y H:i') }} WIB</span>
-                                    </div>
-                                    <div class="text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
-                                        <p><strong class="text-slate-700 dark:text-slate-300">Jumlah:</strong> {{ $reservation->refund->formatted_amount }}</p>
-                                        <p><strong class="text-slate-700 dark:text-slate-300">Tujuan:</strong> {{ $reservation->refund->bank_name }} - {{ $reservation->refund->account_number }} a.n {{ $reservation->refund->account_name }}</p>
-                                        <p><strong class="text-slate-700 dark:text-slate-300">Alasan:</strong> "{{ $reservation->refund->reason }}"</p>
-                                        @if($reservation->refund->admin_notes)
-                                            <div class="mt-1.5 p-1.5 bg-white/50 dark:bg-slate-950 rounded-lg">
-                                                <p class="font-bold text-slate-700 dark:text-slate-300">Catatan Admin:</p>
-                                                <p class="italic">"{{ $reservation->refund->admin_notes }}"</p>
+                            @php
+                                // Get all refunds related to this session, or just this reservation if not a session
+                                $trackingReservations = $sessionReservations->count() > 0 ? $sessionReservations : collect([$reservation]);
+                                $hasAnyRefund = $trackingReservations->contains(fn($res) => $res->refund !== null);
+                            @endphp
+
+                            @if($hasAnyRefund)
+                                <div class="mt-6 space-y-4">
+                                    <h4 class="text-sm font-bold text-slate-800 dark:text-white mb-2">Tracking Pengajuan Refund</h4>
+                                    
+                                    @foreach($trackingReservations as $res)
+                                        @if($res->refund)
+                                            <div class="p-4 bg-{{ $res->refund->status_color }}-50 dark:bg-{{ $res->refund->status_color }}-500/5 border border-{{ $res->refund->status_color }}-200 dark:border-{{ $res->refund->status_color }}-500/20 rounded-xl text-left">
+                                                <div class="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-{{ $res->refund->status_color }}-100 dark:bg-{{ $res->refund->status_color }}-500/20 text-{{ $res->refund->status_color }}-800 dark:text-{{ $res->refund->status_color }}-300 uppercase tracking-wider mb-1">
+                                                            {{ $res->refund->status_label }}
+                                                        </span>
+                                                        <p class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                                            Slot: {{ $res->date->translatedFormat('d M Y') }} ({{ \Carbon\Carbon::parse($res->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($res->end_time)->format('H:i') }})
+                                                        </p>
+                                                    </div>
+                                                    <span class="text-[10px] text-slate-500">{{ $res->refund->created_at->translatedFormat('d M Y H:i') }}</span>
+                                                </div>
+                                                
+                                                <div class="text-[11px] text-slate-600 dark:text-slate-400 space-y-1 mt-2">
+                                                    <p><strong class="text-slate-700 dark:text-slate-300">Jumlah:</strong> {{ $res->refund->formatted_amount }}</p>
+                                                    <p><strong class="text-slate-700 dark:text-slate-300">Tujuan:</strong> {{ $res->refund->bank_name }} - {{ $res->refund->account_number }} a.n {{ $res->refund->account_name }}</p>
+                                                    <p><strong class="text-slate-700 dark:text-slate-300">Alasan:</strong> "{{ $res->refund->reason }}"</p>
+                                                    
+                                                    @if($res->refund->admin_notes)
+                                                        <div class="mt-2 p-2 bg-white/50 dark:bg-slate-950/50 rounded-lg border border-{{ $res->refund->status_color }}-100 dark:border-{{ $res->refund->status_color }}-500/20">
+                                                            <p class="font-bold text-slate-700 dark:text-slate-300">Catatan Admin:</p>
+                                                            <p class="italic">"{{ $res->refund->admin_notes }}"</p>
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </div>
                                         @endif
-                                    </div>
+                                    @endforeach
                                 </div>
                             @endif
                         @else
@@ -500,63 +523,6 @@
         @endpush
     @endif
 
-    {{-- Refund Modal --}}
-    <div id="refund-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity" onclick="closeRefundModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-800">
-                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
-                    <h3 class="text-base font-bold text-slate-800 dark:text-white" id="modal-title">Ajukan Refund Reservasi</h3>
-                    <button type="button" onclick="closeRefundModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                <form action="{{ route('customer.reservations.refund.request', $reservation) }}" method="POST">
-                    @csrf
-                    <div class="p-6 space-y-4">
-                        <div class="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-xs text-amber-800 dark:text-amber-400">
-                            <strong>Perhatian:</strong> Pengajuan refund Anda akan ditinjau oleh Admin. Pastikan data rekening Anda sudah benar.
-                        </div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Nama Bank</label>
-                            <input type="text" name="bank_name" required placeholder="Contoh: BCA, Mandiri, BNI" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 text-sm">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Nomor Rekening</label>
-                            <input type="text" name="account_number" required placeholder="Masukkan nomor rekening Anda" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 text-sm">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Atas Nama Pemilik Rekening</label>
-                            <input type="text" name="account_name" required placeholder="Nama pemilik rekening sesuai bank" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 text-sm">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Alasan Refund</label>
-                            <textarea name="reason" required minlength="10" placeholder="Tuliskan alasan mengapa Anda mengajukan refund" rows="3" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 text-sm"></textarea>
-                        </div>
-                    </div>
-                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
-                        <button type="button" onclick="closeRefundModal()" class="px-4 py-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white text-sm font-semibold rounded-xl transition-colors">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1e3a5f] to-[#e91e8c] hover:from-[#152a46] hover:to-[#ce1277] text-white text-sm font-bold rounded-xl transition-all duration-200">Kirim Pengajuan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    @push('scripts')
-    <script>
-        function openRefundModal() {
-            document.getElementById('refund-modal').classList.remove('hidden');
-        }
-        function closeRefundModal() {
-            document.getElementById('refund-modal').classList.add('hidden');
-        }
-    </script>
-    @endpush
 
 </x-layouts.app>

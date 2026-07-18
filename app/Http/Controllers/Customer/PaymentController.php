@@ -33,7 +33,11 @@ class PaymentController extends BaseController
         }
 
         // 2. Ensure payment exists
-        $payment = $reservation->payment;
+        // Untuk session booking, payment hanya terikat ke 1 reservasi, jadi ambil sessionPayment
+        $payment = $reservation->booking_session_id 
+            ? $reservation->sessionPayment() 
+            : $reservation->payment;
+            
         if (!$payment) {
             return response()->json([
                 'success' => false,

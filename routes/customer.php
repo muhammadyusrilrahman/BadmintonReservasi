@@ -36,6 +36,7 @@ Route::middleware(['auth', 'verified', 'role:customer'])
         Route::post('/reservations/{reservation}/reschedule', [\App\Http\Controllers\Customer\RescheduleController::class, 'process'])->name('reservations.reschedule.process');
 
         // Refund
+        Route::get('/reservations/{reservation}/refund', [\App\Http\Controllers\Customer\RefundController::class, 'create'])->name('reservations.refund.create');
         Route::post('/reservations/{reservation}/refund', [\App\Http\Controllers\Customer\RefundController::class, 'request'])->name('reservations.refund.request');
         Route::get('/refunds', [\App\Http\Controllers\Customer\RefundController::class, 'index'])->name('refunds.index');
 

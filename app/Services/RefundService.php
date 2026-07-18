@@ -69,7 +69,8 @@ class RefundService extends BaseService
 
     /**
      * Admin approves a refund request.
-     * This cancels the reservation and marks payment as refunded.
+     * Hanya membatalkan slot yang di-refund (partial refund support).
+     * Payment sesi diubah ke 'refunded' hanya jika SEMUA slot dalam sesi sudah dibatalkan.
      */
     public function approveRefund(Refund $refund, string $adminNotes, int $adminId): Refund
     {
@@ -92,16 +93,29 @@ class RefundService extends BaseService
 
             $oldStatus = $reservation->status;
 
-            // Update reservation status to cancelled
-            $reservation->update([
-                'status' => 'cancelled',
-            ]);
+            // Batalkan HANYA slot ini (tidak semua sesi)
+            $reservation->update(['status' => 'cancelled']);
 
-            // Update payment status to refunded
-            if ($reservation->payment) {
-                $reservation->payment->update([
-                    'status' => 'refunded',
-                ]);
+            // Tentukan apakah perlu update payment
+            if ($reservation->booking_session_id) {
+                // Session booking: cek apakah semua slot dalam sesi sudah cancelled/refunded
+                $activeSlots = \App\Models\Reservation::where('booking_session_id', $reservation->booking_session_id)
+                    ->whereNotIn('status', ['cancelled'])
+                    ->count();
+
+                if ($activeSlots === 0) {
+                    // Semua slot dibatalkan → tandai payment sesi sebagai refunded
+                    $sessionPayment = \App\Models\Payment::where('booking_session_id', $reservation->booking_session_id)->first();
+                    if ($sessionPayment && $sessionPayment->status !== 'refunded') {
+                        $sessionPayment->update(['status' => 'refunded']);
+                    }
+                }
+                // Jika masih ada slot aktif → partial refund, payment sesi tetap 'paid'
+            } else {
+                // Single booking: tandai payment sebagai refunded seperti sebelumnya
+                if ($reservation->payment) {
+                    $reservation->payment->update(['status' => 'refunded']);
+                }
             }
 
             // Create status log
@@ -111,10 +125,11 @@ class RefundService extends BaseService
                 'old_status'     => $oldStatus,
                 'new_status'     => 'cancelled',
                 'change_type'    => 'refund_approved',
-                'description'    => "Pengajuan refund disetujui oleh Admin. Reservasi dibatalkan dan dana dikembalikan. Catatan admin: {$adminNotes}",
+                'description'    => "Pengajuan refund disetujui oleh Admin. Slot ini dibatalkan dan dana dikembalikan. Catatan admin: {$adminNotes}",
                 'payload'        => [
-                    'refund_id'   => $refund->id,
-                    'admin_notes' => $adminNotes,
+                    'refund_id'            => $refund->id,
+                    'admin_notes'          => $adminNotes,
+                    'booking_session_id'   => $reservation->booking_session_id,
                 ]
             ]);
 

@@ -29,7 +29,7 @@
 
     {{-- Main Card/Table --}}
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        @if($refunds->count() > 0)
+        @if($groupedRefunds->count() > 0)
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -44,47 +44,56 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
-                        @foreach($refunds as $refund)
+                        @foreach($groupedRefunds as $groupTime => $group)
+                            @php 
+                                $firstRefund = $group->first(); 
+                                $totalAmount = $group->sum('amount');
+                            @endphp
                             <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/10 transition-colors">
                                 <td class="px-6 py-4">
-                                    <div class="font-bold text-slate-800 dark:text-white">#REF-{{ $refund->id }}</div>
-                                    <div class="text-xs font-mono font-bold text-pink-600 dark:text-pink-400 mt-0.5">{{ $refund->reservation->booking_code }}</div>
-                                    <div class="text-[10px] text-slate-400 mt-1">Diajukan: {{ $refund->created_at->translatedFormat('d/m/Y H:i') }}</div>
+                                    <div class="font-bold text-slate-800 dark:text-white">#REF-{{ $firstRefund->id }}</div>
+                                    <div class="text-xs font-mono font-bold text-pink-600 dark:text-pink-400 mt-0.5">{{ $firstRefund->reservation->booking_code }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-1">Diajukan: {{ $firstRefund->created_at->translatedFormat('d/m/Y H:i') }}</div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="font-semibold text-slate-800 dark:text-slate-200 text-sm">{{ $refund->reservation->court->name }}</div>
-                                    <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                        {{ $refund->reservation->date->translatedFormat('d M Y') }}
+                                    <div class="font-semibold text-slate-800 dark:text-slate-200 text-sm">{{ $firstRefund->reservation->court->name }}</div>
+                                    <div class="space-y-1 mt-1">
+                                        @foreach($group as $refund)
+                                            <div class="text-xs text-slate-500 dark:text-slate-400">
+                                                {{ $refund->reservation->date->translatedFormat('d M Y') }}
+                                                ({{ \Carbon\Carbon::parse($refund->reservation->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($refund->reservation->end_time)->format('H:i') }})
+                                            </div>
+                                        @endforeach
                                     </div>
-                                    <div class="text-[10px] text-slate-400 mt-0.5">
-                                        {{ \Carbon\Carbon::parse($refund->reservation->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($refund->reservation->end_time)->format('H:i') }} ({{ $refund->reservation->duration_hours }} Jam)
-                                    </div>
+                                    @if($group->count() > 1)
+                                        <div class="mt-1"><span class="inline-block px-2 py-0.5 bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 rounded-full text-[10px] font-bold">{{ $group->count() }} Slot Digabung</span></div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 font-extrabold text-slate-800 dark:text-white">
-                                    {{ $refund->formatted_amount }}
+                                    Rp {{ number_format($totalAmount, 0, ',', '.') }}
                                 </td>
                                 <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-300">
-                                    <div class="font-bold text-slate-800 dark:text-white">{{ $refund->bank_name }}</div>
-                                    <div class="font-mono mt-0.5">{{ $refund->account_number }}</div>
-                                    <div class="text-slate-400 mt-0.5">a.n {{ $refund->account_name }}</div>
+                                    <div class="font-bold text-slate-800 dark:text-white">{{ $firstRefund->bank_name }}</div>
+                                    <div class="font-mono mt-0.5">{{ $firstRefund->account_number }}</div>
+                                    <div class="text-slate-400 mt-0.5">a.n {{ $firstRefund->account_name }}</div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-extrabold bg-{{ $refund->status_color }}-50 dark:bg-{{ $refund->status_color }}-500/10 text-{{ $refund->status_color }}-600 dark:text-{{ $refund->status_color }}-400 uppercase tracking-wider">
-                                        {{ $refund->status_label }}
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-extrabold bg-{{ $firstRefund->status_color }}-50 dark:bg-{{ $firstRefund->status_color }}-500/10 text-{{ $firstRefund->status_color }}-600 dark:text-{{ $firstRefund->status_color }}-400 uppercase tracking-wider">
+                                        {{ $firstRefund->status_label }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-xs max-w-xs truncate">
-                                    @if($refund->admin_notes)
-                                        <p class="text-slate-600 dark:text-slate-300 italic">"{{ $refund->admin_notes }}"</p>
-                                        @if($refund->completed_at)
-                                            <p class="text-[10px] text-slate-400 mt-1">Ditransfer: {{ $refund->completed_at->translatedFormat('d M Y H:i') }}</p>
+                                    @if($firstRefund->admin_notes)
+                                        <p class="text-slate-600 dark:text-slate-300 italic">"{{ $firstRefund->admin_notes }}"</p>
+                                        @if($firstRefund->completed_at)
+                                            <p class="text-[10px] text-slate-400 mt-1">Ditransfer: {{ $firstRefund->completed_at->translatedFormat('d M Y H:i') }}</p>
                                         @endif
                                     @else
                                         <span class="text-slate-400 italic">Belum ada tanggapan</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <a href="{{ route('customer.reservations.show', $refund->reservation) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-pink-600 hover:text-white dark:hover:bg-pink-600 dark:hover:text-white rounded-lg text-slate-700 dark:text-slate-300 text-xs font-semibold transition-all duration-200">
+                                    <a href="{{ route('customer.reservations.show', $firstRefund->reservation) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-pink-600 hover:text-white dark:hover:bg-pink-600 dark:hover:text-white rounded-lg text-slate-700 dark:text-slate-300 text-xs font-semibold transition-all duration-200">
                                         Detail
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                     </a>
@@ -94,13 +103,6 @@
                     </tbody>
                 </table>
             </div>
-
-            {{-- Pagination --}}
-            @if($refunds->hasPages())
-                <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800">
-                    {{ $refunds->links() }}
-                </div>
-            @endif
         @else
             {{-- Empty State --}}
             <div class="text-center py-16 px-6">
