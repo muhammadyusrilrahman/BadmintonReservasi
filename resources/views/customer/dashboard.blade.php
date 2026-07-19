@@ -1,8 +1,17 @@
 <x-layouts.app :title="$title">
-    <div class="mb-8">
+    <div class="mb-6">
         <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Halo, {{ auth()->user()->name }}! 🏸</h1>
         <p class="text-slate-500 dark:text-slate-400 mt-1">Ayo booking lapangan untuk bermain badminton!</p>
     </div>
+
+    {{-- Schedule Section (TOP) --}}
+    <x-schedule-grid
+        :courts="$courts"
+        :schedule-date="$scheduleDate"
+        :operational-hours="$operationalHours"
+        dashboard-route="customer.dashboard"
+        :show-user-name="false"
+    />
 
     {{-- Quick Actions --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
@@ -73,9 +82,16 @@
                             </div>
                             <div class="text-right flex-shrink-0">
                                 <p class="text-sm font-bold text-slate-800 dark:text-white">{{ $reservation->formatted_total_price }}</p>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium mt-1
-                                    bg-{{ $reservation->status_color }}-50 dark:bg-{{ $reservation->status_color }}-500/10
-                                    text-{{ $reservation->status_color }}-700 dark:text-{{ $reservation->status_color }}-400">
+                                @php
+                                    $colors = [
+                                        'amber' => 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
+                                        'blue' => 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400',
+                                        'emerald' => 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+                                        'red' => 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400',
+                                    ];
+                                    $badgeClass = $colors[$reservation->status_color] ?? 'bg-slate-50 dark:bg-slate-500/10 text-slate-700 dark:text-slate-400';
+                                @endphp
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium mt-1 {{ $badgeClass }}">
                                     {{ $reservation->status_label }}
                                 </span>
                             </div>

@@ -1,8 +1,17 @@
 <x-layouts.app :title="$title ?? 'Dashboard Kasir'">
-    <div class="mb-8">
+    <div class="mb-6">
         <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Dashboard Kasir 💰</h1>
         <p class="text-slate-500 dark:text-slate-400 mt-1">Kelola transaksi dan pembayaran reservasi.</p>
     </div>
+
+    {{-- Schedule Section (TOP) --}}
+    <x-schedule-grid
+        :courts="$courts"
+        :schedule-date="$scheduleDate"
+        :operational-hours="$operationalHours"
+        dashboard-route="kasir.dashboard"
+        :show-user-name="true"
+    />
 
     {{-- Stats --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">

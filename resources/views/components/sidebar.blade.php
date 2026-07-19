@@ -95,6 +95,7 @@
             <p class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Transaksi</p>
             <div class="space-y-1">
                 <x-sidebar-link href="{{ route('kasir.promos.index') }}" :active="request()->routeIs('kasir.promos.*')" icon="promo">Daftar Promo</x-sidebar-link>
+                <x-sidebar-link href="{{ route('kasir.reservations.create') }}" :active="request()->routeIs('kasir.reservations.create')" icon="calendar">Tambah Reservasi</x-sidebar-link>
                 <x-sidebar-link href="{{ route('kasir.transactions.index') }}" :active="request()->routeIs('kasir.transactions.*')" icon="money">Transaksi</x-sidebar-link>
                 <x-sidebar-link href="{{ route('kasir.today.index') }}" :active="request()->routeIs('kasir.today.*')" icon="calendar">Reservasi Hari Ini</x-sidebar-link>
                 <x-sidebar-link href="{{ route('kasir.daily-report.index') }}" :active="request()->routeIs('kasir.daily-report.*')" icon="chart">Laporan Harian</x-sidebar-link>
