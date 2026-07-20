@@ -33,47 +33,75 @@ class MidtransService
         $orderId = 'RSV-' . $payment->reservation_id . '-PMT-' . $payment->id . '-' . time();
 
         $user = $payment->reservation->user;
-        $courtName = $payment->reservation->court->name;
-        $dateFormatted = $payment->reservation->date->format('d-m-Y');
-        $startTime = substr($payment->reservation->start_time, 0, 5);
-        $endTime = substr($payment->reservation->end_time, 0, 5);
 
+        // Build item_details per slot untuk transparansi di Midtrans
         if ($payment->booking_session_id) {
-            $slotCount = \App\Models\Reservation::where('booking_session_id', $payment->booking_session_id)->count();
-            $itemName = "Sesi {$courtName} ({$dateFormatted}) - {$slotCount} Slot";
+            // Session booking: tampilkan setiap slot secara individual
+            $sessionReservations = \App\Models\Reservation::with('court')
+                ->where('booking_session_id', $payment->booking_session_id)
+                ->orderBy('date')
+                ->orderBy('start_time')
+                ->get();
+
+            $itemDetails = $sessionReservations->map(function ($res) {
+                $startTime   = substr($res->start_time, 0, 5);
+                $endTime     = substr($res->end_time, 0, 5);
+                $dateFormatted = $res->date->format('d/m/Y');
+                $name = "{$res->court->name} {$dateFormatted} {$startTime}-{$endTime}";
+
+                return [
+                    'id'       => 'rsv-' . $res->id,
+                    'price'    => (int) $res->total_price,
+                    'quantity' => 1,
+                    'name'     => strlen($name) > 50 ? substr($name, 0, 47) . '...' : $name,
+                ];
+            })->toArray();
+
+            // Hitung total dari harga asli tiap reservasi (bukan dari payment.amount yang mungkin stale)
+            $grossAmount = $sessionReservations->sum('total_price');
         } else {
-            $itemName = "Booking {$courtName} ({$dateFormatted} {$startTime}-{$endTime})";
+            // Single booking
+            $reservation   = $payment->reservation;
+            $courtName     = $reservation->court->name;
+            $dateFormatted = $reservation->date->format('d/m/Y');
+            $startTime     = substr($reservation->start_time, 0, 5);
+            $endTime       = substr($reservation->end_time, 0, 5);
+            $name          = "Booking {$courtName} {$dateFormatted} {$startTime}-{$endTime}";
+
+            $itemDetails = [
+                [
+                    'id'       => 'rsv-' . $reservation->id,
+                    'price'    => (int) $reservation->total_price,
+                    'quantity' => 1,
+                    'name'     => strlen($name) > 50 ? substr($name, 0, 47) . '...' : $name,
+                ]
+            ];
+
+            $grossAmount = (int) $reservation->total_price;
         }
 
-        // Limit name to 50 characters (Midtrans requirement)
-        if (strlen($itemName) > 50) {
-            $itemName = substr($itemName, 0, 47) . '...';
+        // Sync payment.amount jika berbeda (corrective update)
+        if ($payment->amount !== $grossAmount) {
+            $payment->update(['amount' => $grossAmount]);
         }
 
         // Midtrans Snap API Payload
         $payload = [
             'transaction_details' => [
-                'order_id' => $orderId,
-                'gross_amount' => (int) $payment->amount,
+                'order_id'     => $orderId,
+                'gross_amount' => $grossAmount,
             ],
-            'item_details' => [
-                [
-                    'id' => 'court-' . $payment->reservation->court_id,
-                    'price' => (int) $payment->amount,
-                    'quantity' => 1,
-                    'name' => $itemName,
-                ]
-            ],
-            'customer_details' => [
+            'item_details'        => $itemDetails,
+            'customer_details'    => [
                 'first_name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone ?? '',
+                'email'      => $user->email,
+                'phone'      => $user->phone ?? '',
             ],
-            'expiry' => [
+            'expiry'              => [
                 // Set checkout expiration to match automatic cancellation logic
                 'start_time' => now()->format('Y-m-d H:i:s O'),
-                'unit' => 'minute',
-                'duration' => config('reservation.expiry_minutes'),
+                'unit'       => 'minute',
+                'duration'   => config('reservation.expiry_minutes'),
             ],
         ];
 

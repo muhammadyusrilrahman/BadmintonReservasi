@@ -82,22 +82,19 @@ class ReservationController extends BaseController
             $bookingSessionId = (string) Str::uuid();
 
             // Hitung total harga semua slot (diperlukan untuk payment tunggal)
-            // Kita perlu pre-calculate harga sebelum buat reservasi
+            // PENTING: hitung per-hari untuk menghindari deduplikasi schedule ID yang sama
+            // di beberapa hari (whereIn hanya kembalikan schedule unik, bukan per-booking)
             $court = Court::with(['schedules'])->findOrFail($request->court_id);
-            $allScheduleIds = [];
+
+            $sessionOriginalTotal = 0;
             foreach ($request->bookings as $booking) {
-                foreach ($booking['schedule_ids'] as $sid) {
-                    $allScheduleIds[] = $sid;
-                }
+                $daySchedules = $court->schedules()
+                    ->whereIn('id', $booking['schedule_ids'])
+                    ->where('is_active', true)
+                    ->get();
+                $sessionOriginalTotal += $daySchedules->sum('price');
             }
 
-            $allSchedules = $court->schedules()
-                ->whereIn('id', $allScheduleIds)
-                ->where('is_active', true)
-                ->get();
-
-            // Hitung total original price seluruh sesi
-            $sessionOriginalTotal = $allSchedules->sum('price');
 
             // Hitung diskon promo jika ada
             $sessionDiscount = 0;
