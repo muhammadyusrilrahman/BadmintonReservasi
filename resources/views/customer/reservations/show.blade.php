@@ -332,13 +332,17 @@
         document.addEventListener('DOMContentLoaded', function() {
             const qrContainer = document.getElementById('qr-code');
             if (qrContainer) {
-                const canvas = document.createElement('canvas');
-                QRCode.toCanvas(canvas, '{{ route("staff.checkin.verify", $reservation->booking_code) }}', {
-                    width: 200,
-                    margin: 2,
-                    color: { dark: '#1e3a5f', light: '#ffffff' }
-                });
-                qrContainer.appendChild(canvas);
+                QRCode.toCanvas(
+                    '{{ route("staff.checkin.verify", $reservation->booking_code) }}',
+                    { width: 200, margin: 2, color: { dark: '#1e3a5f', light: '#ffffff' } },
+                    function(err, canvas) {
+                        if (err) {
+                            console.error('QR Code generation failed:', err);
+                            return;
+                        }
+                        qrContainer.appendChild(canvas);
+                    }
+                );
             }
         });
     </script>
