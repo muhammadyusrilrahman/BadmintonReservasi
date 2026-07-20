@@ -34,7 +34,8 @@
         <x-sidebar />
 
         {{-- Main --}}
-        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 lg:ml-72">
+        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300"
+             :style="sidebarOpen && window.innerWidth >= 1024 ? 'margin-left: 18rem' : ''">
 
             <x-navbar :title="$title ?? 'Dashboard'" />
 
