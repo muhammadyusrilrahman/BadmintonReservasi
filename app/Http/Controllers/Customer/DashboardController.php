@@ -40,7 +40,7 @@ class DashboardController extends BaseController
 
         $scheduleDateStr = $scheduleDate->toDateString();
 
-        $operationalHours = range(6, 21);
+        $operationalHours = range(6, 23);
 
         $courts = Court::where('is_active', true)
             ->with([

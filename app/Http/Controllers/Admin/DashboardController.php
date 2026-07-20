@@ -47,7 +47,7 @@ class DashboardController extends BaseController
         $scheduleDateStr = $scheduleDate->toDateString(); // 'YYYY-MM-DD'
 
         // Jam operasional: 06.00 – 21.00
-        $operationalHours = range(6, 21);
+        $operationalHours = range(6, 23);
 
         $courts = Court::where('is_active', true)
             ->with([
