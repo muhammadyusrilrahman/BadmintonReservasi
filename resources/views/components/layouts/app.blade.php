@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: (() => { try { return localStorage.getItem('darkMode') === 'true' } catch(e) { return false } })(), sidebarOpen: true }" x-init="$watch('darkMode', val => { try { localStorage.setItem('darkMode', val) } catch(e) {} })" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: (() => { try { return localStorage.getItem('darkMode') === 'true' } catch(e) { return false } })(), sidebarOpen: window.innerWidth >= 1024 }" x-init="$watch('darkMode', val => { try { localStorage.setItem('darkMode', val) } catch(e) {} })" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,7 +34,7 @@
         <x-sidebar />
 
         {{-- Main --}}
-        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 ml-72">
+        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 lg:ml-72">
 
             <x-navbar :title="$title ?? 'Dashboard'" />
 
