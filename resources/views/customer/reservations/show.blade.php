@@ -318,35 +318,22 @@
             QR Code Check-in
         </h3>
         <div class="flex flex-col items-center">
-            <div id="qr-code" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100"></div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                @php
+                    $checkInUrl = route('staff.checkin.verify', $reservation->booking_code);
+                    $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($checkInUrl);
+                @endphp
+                <img src="{{ $qrUrl }}"
+                     alt="QR Code Check-in {{ $reservation->booking_code }}"
+                     width="200" height="200"
+                     class="rounded-lg">
+            </div>
             <div class="mt-4 text-center">
                 <p class="text-xs font-mono font-bold text-slate-800 dark:text-white tracking-widest bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg">{{ $reservation->booking_code }}</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Tunjukkan QR Code ini ke petugas saat datang ke lapangan.</p>
             </div>
         </div>
     </div>
-
-    @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const qrContainer = document.getElementById('qr-code');
-            if (qrContainer) {
-                QRCode.toCanvas(
-                    '{{ route("staff.checkin.verify", $reservation->booking_code) }}',
-                    { width: 200, margin: 2, color: { dark: '#1e3a5f', light: '#ffffff' } },
-                    function(err, canvas) {
-                        if (err) {
-                            console.error('QR Code generation failed:', err);
-                            return;
-                        }
-                        qrContainer.appendChild(canvas);
-                    }
-                );
-            }
-        });
-    </script>
-    @endpush
     @endif
 
     {{-- ==================== SECTION ULASAN ==================== --}}
