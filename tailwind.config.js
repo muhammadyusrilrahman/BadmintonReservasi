@@ -11,6 +11,20 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
+    // Warna dinamis dari status_color (amber, blue, emerald, red, slate)
+    // Tailwind JIT tidak bisa mendeteksi class dari "bg-{{ $status_color }}-50"
+    safelist: [
+        // Pola: {color}-{shade} untuk bg, text, border (light & dark mode)
+        ...['amber', 'blue', 'emerald', 'red', 'slate'].flatMap(color => [
+            `bg-${color}-50`, `bg-${color}-100`, `bg-${color}-200`,
+            `bg-${color}-500`, `bg-${color}-500/5`, `bg-${color}-500/10`, `bg-${color}-500/20`,
+            `text-${color}-300`, `text-${color}-400`, `text-${color}-500`,
+            `text-${color}-600`, `text-${color}-700`, `text-${color}-800`,
+            `border-${color}-200`, `border-${color}-500/10`, `border-${color}-500/20`,
+            `border-${color}-800`, `border-${color}-800/30`,
+        ]),
+    ],
+
     theme: {
         extend: {
             fontFamily: {
