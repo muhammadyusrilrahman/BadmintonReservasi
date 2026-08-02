@@ -81,7 +81,8 @@ class RefundService extends BaseService
                 throw new InvalidArgumentException("Hanya pengajuan refund berstatus 'Diajukan' (requested) yang dapat disetujui.");
             }
 
-            $reservation = $refund->reservation;
+            // Reload reservation fresh dari DB dengan relasi payment
+            $reservation = $refund->reservation()->with('payment')->firstOrFail();
 
             // Update refund status
             $refund->update([
@@ -99,6 +100,7 @@ class RefundService extends BaseService
             // Tentukan apakah perlu update payment
             if ($reservation->booking_session_id) {
                 // Session booking: cek apakah semua slot dalam sesi sudah cancelled/refunded
+                // (query ulang dari DB setelah slot ini di-cancelled)
                 $activeSlots = \App\Models\Reservation::where('booking_session_id', $reservation->booking_session_id)
                     ->whereNotIn('status', ['cancelled'])
                     ->count();
@@ -112,9 +114,12 @@ class RefundService extends BaseService
                 }
                 // Jika masih ada slot aktif → partial refund, payment sesi tetap 'paid'
             } else {
-                // Single booking: tandai payment sebagai refunded seperti sebelumnya
-                if ($reservation->payment) {
-                    $reservation->payment->update(['status' => 'refunded']);
+                // Single booking: cari payment via reservation_id ATAU booking_session_id
+                $payment = $reservation->payment
+                    ?? \App\Models\Payment::where('reservation_id', $reservation->id)->first();
+
+                if ($payment && $payment->status !== 'refunded') {
+                    $payment->update(['status' => 'refunded']);
                 }
             }
 
