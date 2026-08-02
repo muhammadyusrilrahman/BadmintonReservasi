@@ -47,18 +47,18 @@
                         </div>
                         <div class="sm:col-span-2 p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/80">
                             <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Tujuan Transfer Balik</p>
-                            <div class="grid grid-cols-3 gap-2 text-xs">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                                 <div>
                                     <span class="text-slate-400 block mb-0.5">Nama Bank:</span>
-                                    <span class="font-bold text-slate-800 dark:text-white text-sm bg-slate-200 dark:bg-slate-800 px-2.5 py-0.5 rounded">{{ $refund->bank_name }}</span>
+                                    <span class="font-bold text-slate-800 dark:text-white text-sm bg-slate-200 dark:bg-slate-800 px-2.5 py-0.5 rounded break-words inline-block">{{ $refund->bank_name }}</span>
                                 </div>
-                                <div>
+                                <div class="overflow-hidden">
                                     <span class="text-slate-400 block mb-0.5">Nomor Rekening:</span>
-                                    <span class="font-mono font-bold text-slate-800 dark:text-white text-sm tracking-wider" id="acc-number">{{ $refund->account_number }}</span>
+                                    <span class="font-mono font-bold text-slate-800 dark:text-white text-sm tracking-wider break-all" id="acc-number">{{ $refund->account_number }}</span>
                                 </div>
-                                <div>
+                                <div class="overflow-hidden">
                                     <span class="text-slate-400 block mb-0.5">Atas Nama Pemilik:</span>
-                                    <span class="font-bold text-slate-800 dark:text-white text-sm capitalize">{{ $refund->account_name }}</span>
+                                    <span class="font-bold text-slate-800 dark:text-white text-sm capitalize break-words">{{ $refund->account_name }}</span>
                                 </div>
                             </div>
                         </div>
@@ -81,10 +81,10 @@
                     </h2>
                 </div>
                 <div class="p-6">
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                        <div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div class="overflow-hidden">
                             <span class="text-xs font-semibold text-slate-400 block mb-1">Kode Booking</span>
-                            <span class="font-mono font-bold text-pink-600 dark:text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded text-xs">{{ $refund->reservation->booking_code }}</span>
+                            <span class="font-mono font-bold text-pink-600 dark:text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded text-xs break-all">{{ $refund->reservation->booking_code }}</span>
                         </div>
                         <div>
                             <span class="text-xs font-semibold text-slate-400 block mb-1">Lapangan</span>
@@ -101,10 +101,10 @@
                     </div>
 
                     @if($refund->reservation->payment)
-                        <div class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                            <div>
+                        <div class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                            <div class="overflow-hidden">
                                 <span class="text-slate-400 block mb-0.5">ID Transaksi Midtrans</span>
-                                <span class="font-mono font-medium text-slate-800 dark:text-white">{{ $refund->reservation->payment->midtrans_transaction_id ?? 'N/A (Transfer Manual)' }}</span>
+                                <span class="font-mono font-medium text-slate-800 dark:text-white break-all">{{ $refund->reservation->payment->midtrans_transaction_id ?? 'N/A (Transfer Manual)' }}</span>
                             </div>
                             <div>
                                 <span class="text-slate-400 block mb-0.5">Metode Pembayaran</span>
