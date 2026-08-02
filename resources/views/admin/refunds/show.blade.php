@@ -213,7 +213,7 @@
                     
                     {{-- 1. Status: REQUESTED --}}
                     @if($refund->status === \App\Models\Refund::STATUS_REQUESTED)
-                        <div x-data="{ action: 'approve' }" class="space-y-6">
+                        <div x-data="{ action: 'approve', approveNotes: '', rejectNotes: '' }" class="space-y-6">
                             
                             {{-- Selector --}}
                             <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl">
@@ -244,13 +244,16 @@
                                     @csrf
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Catatan Persetujuan</label>
-                                        <textarea name="admin_notes" required placeholder="Contoh: Pengajuan disetujui. Dana akan ditransfer dalam 1x24 jam." rows="3" class="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 transition resize-none"></textarea>
+                                        <textarea name="admin_notes" x-model="approveNotes" required placeholder="Contoh: Pengajuan disetujui. Dana akan ditransfer dalam 1x24 jam." rows="3" class="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 transition resize-none"></textarea>
                                     </div>
                                     <button type="button"
                                             @click="$dispatch('open-global-confirm', { formId: 'approve-form', message: 'Apakah Anda yakin ingin MENYETUJUI pengajuan refund ini? Slot reservasi lapangan akan dibebaskan kembali secara otomatis.' })"
-                                            class="w-full mt-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.98] text-xs">
+                                            :disabled="approveNotes.trim() === ''"
+                                            :class="approveNotes.trim() === '' ? 'opacity-40 cursor-not-allowed' : 'hover:bg-emerald-700 active:scale-[0.98]'"
+                                            class="w-full mt-4 py-3 bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-md text-xs">
                                         Setujui & Bebaskan Slot
                                     </button>
+                                    <p x-show="approveNotes.trim() === ''" class="text-[11px] text-amber-600 dark:text-amber-400 text-center mt-1.5">⚠️ Isi catatan persetujuan terlebih dahulu</p>
                                 </form>
                             </div>
 
@@ -267,13 +270,16 @@
                                     @csrf
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Alasan Penolakan</label>
-                                        <textarea name="admin_notes" required placeholder="Tulis alasan logis penolakan refund, contoh: Pengajuan diajukan melewati batas H-1." rows="3" class="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 transition resize-none"></textarea>
+                                        <textarea name="admin_notes" x-model="rejectNotes" required placeholder="Tulis alasan logis penolakan refund, contoh: Pengajuan diajukan melewati batas H-1." rows="3" class="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 transition resize-none"></textarea>
                                     </div>
                                     <button type="button"
                                             @click="$dispatch('open-global-confirm', { formId: 'reject-form', message: 'Apakah Anda yakin ingin MENOLAK pengajuan refund ini? Reservasi dan pembayaran customer akan tetap aktif.' })"
-                                            class="w-full mt-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.98] text-xs">
+                                            :disabled="rejectNotes.trim() === ''"
+                                            :class="rejectNotes.trim() === '' ? 'opacity-40 cursor-not-allowed' : 'hover:bg-red-700 active:scale-[0.98]'"
+                                            class="w-full mt-4 py-3 bg-red-600 text-white font-bold rounded-xl transition-all shadow-md text-xs">
                                         Tolak Refund Customer
                                     </button>
+                                    <p x-show="rejectNotes.trim() === ''" class="text-[11px] text-amber-600 dark:text-amber-400 text-center mt-1.5">⚠️ Isi alasan penolakan terlebih dahulu</p>
                                 </form>
                             </div>
 
