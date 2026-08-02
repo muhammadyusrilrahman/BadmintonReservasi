@@ -34,7 +34,7 @@
         <x-sidebar />
 
         {{-- Main --}}
-        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300"
+        <div class="flex-1 min-w-0 flex flex-col min-h-screen transition-all duration-300"
              :style="sidebarOpen && window.innerWidth >= 1024 ? 'margin-left: 18rem' : ''">
 
             <x-navbar :title="$title ?? 'Dashboard'" />
@@ -45,7 +45,7 @@
             @session('warning') <div class="px-4 sm:px-6 lg:px-8 pt-4"><x-alert type="warning" :message="$value" /></div> @endsession
             @session('info') <div class="px-4 sm:px-6 lg:px-8 pt-4"><x-alert type="info" :message="$value" /></div> @endsession
 
-            <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8">
+            <main id="main-content" class="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8">
                 {{ $slot }}
             </main>
 

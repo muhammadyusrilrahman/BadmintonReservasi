@@ -60,7 +60,7 @@
     </div>
 
     {{-- Filters & Content Card --}}
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden w-full max-w-full">
         
         {{-- Status Filter Tabs --}}
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20 flex flex-wrap items-center justify-between gap-4">
@@ -94,8 +94,8 @@
 
         {{-- Table --}}
         @if($refunds->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+            <div class="overflow-x-auto w-full">
+                <table class="w-full text-left border-collapse whitespace-nowrap min-w-max">
                     <thead>
                         <tr class="bg-slate-50/20 dark:bg-slate-800/10 border-b border-slate-200 dark:border-slate-800">
                             <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ID / Pemohon</th>
