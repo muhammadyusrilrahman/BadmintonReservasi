@@ -1,7 +1,7 @@
 <x-layouts.app :title="$title">
 
     {{-- Breadcrumb --}}
-    <nav class="flex items-center gap-2 text-sm mb-6" aria-label="Breadcrumb">
+    <nav class="flex flex-wrap items-center gap-2 text-sm mb-6" aria-label="Breadcrumb">
         <a href="{{ route('admin.refunds.index') }}" class="text-slate-500 dark:text-slate-400 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Daftar Refund</a>
         <svg class="w-4 h-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         <span class="text-slate-800 dark:text-white font-medium">Detail #REF-{{ $refund->id }}</span>
@@ -38,8 +38,8 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
                         <div>
                             <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Customer Pemohon</p>
-                            <p class="text-sm font-bold text-slate-800 dark:text-white">{{ $refund->user->name }}</p>
-                            <p class="text-xs text-slate-500">{{ $refund->user->email }} | {{ $refund->user->phone ?? 'No Phone' }}</p>
+                            <p class="text-sm font-bold text-slate-800 dark:text-white break-words">{{ $refund->user->name }}</p>
+                            <p class="text-xs text-slate-500 break-all">{{ $refund->user->email }} | {{ $refund->user->phone ?? 'No Phone' }}</p>
                         </div>
                         <div>
                             <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Nominal Refund (100%)</p>
@@ -64,7 +64,7 @@
                         </div>
                         <div class="sm:col-span-2">
                             <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Alasan Pengajuan Refund</p>
-                            <div class="p-3 bg-red-50/50 dark:bg-red-500/5 border border-red-100 dark:border-red-500/10 rounded-xl text-sm italic text-slate-700 dark:text-slate-350">
+                            <div class="p-3 bg-red-50/50 dark:bg-red-500/5 border border-red-100 dark:border-red-500/10 rounded-xl text-sm italic text-slate-700 dark:text-slate-350 break-words">
                                 "{{ $refund->reason }}"
                             </div>
                         </div>
@@ -162,7 +162,7 @@
                                                     </span>
                                                 </div>
                                                 <div class="flex-1 min-w-0 pt-1.5">
-                                                    <div class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                                    <div class="text-xs font-semibold text-slate-800 dark:text-slate-200 break-words">
                                                         {{ $log->description }}
                                                     </div>
                                                     <div class="text-[10px] text-slate-400 mt-1 flex items-center gap-2">
@@ -290,7 +290,7 @@
                         <div class="space-y-4">
                             <div class="p-4 bg-blue-50 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-500/20 rounded-xl text-[11px] text-blue-800 dark:text-blue-400 leading-relaxed">
                                 <strong>Catatan Admin Sebelumnya:</strong><br>
-                                <span class="italic">"{{ $refund->admin_notes }}"</span>
+                                <span class="italic break-words">"{{ $refund->admin_notes }}"</span>
                             </div>
 
                             <div class="p-4 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 rounded-xl text-[11px] text-amber-800 dark:text-amber-400 leading-relaxed">
@@ -331,7 +331,7 @@
                             <p class="text-[11px] text-red-700 dark:text-red-500 mt-1.5 leading-relaxed">
                                 Pengajuan refund ini ditolak. Reservasi tetap aktif di sistem.<br>
                                 Alasan penolakan:<br>
-                                <span class="italic font-semibold text-slate-700 dark:text-slate-300">"{{ $refund->admin_notes }}"</span>
+                                <span class="italic font-semibold text-slate-700 dark:text-slate-300 break-words">"{{ $refund->admin_notes }}"</span>
                             </p>
                         </div>
                     @endif
