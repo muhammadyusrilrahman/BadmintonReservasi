@@ -240,13 +240,14 @@
                                     3. Status Refund menjadi **Disetujui** (tinggal ditransfer dana).
                                 </div>
 
-                                <form action="{{ route('admin.refunds.approve', $refund) }}" method="POST" id="approve-form" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI pengajuan refund ini? Slot reservasi lapangan akan dibebaskan kembali secara otomatis.')">
+                                <form action="{{ route('admin.refunds.approve', $refund) }}" method="POST" id="approve-form">
                                     @csrf
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Catatan Persetujuan</label>
                                         <textarea name="admin_notes" required placeholder="Contoh: Pengajuan disetujui. Dana akan ditransfer dalam 1x24 jam." rows="3" class="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 transition resize-none"></textarea>
                                     </div>
-                                    <button type="submit"
+                                    <button type="button"
+                                            @click="$dispatch('open-global-confirm', { formId: 'approve-form', message: 'Apakah Anda yakin ingin MENYETUJUI pengajuan refund ini? Slot reservasi lapangan akan dibebaskan kembali secara otomatis.' })"
                                             class="w-full mt-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.98] text-xs">
                                         Setujui & Bebaskan Slot
                                     </button>
@@ -262,13 +263,14 @@
                                     3. Status Refund menjadi **Ditolak**.
                                 </div>
 
-                                <form action="{{ route('admin.refunds.reject', $refund) }}" method="POST" id="reject-form" onsubmit="return confirm('Apakah Anda yakin ingin MENOLAK pengajuan refund ini? Reservasi dan pembayaran customer akan tetap aktif.')">
+                                <form action="{{ route('admin.refunds.reject', $refund) }}" method="POST" id="reject-form">
                                     @csrf
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Alasan Penolakan</label>
                                         <textarea name="admin_notes" required placeholder="Tulis alasan logis penolakan refund, contoh: Pengajuan diajukan melewati batas H-1." rows="3" class="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-white focus:ring-pink-500 focus:border-pink-500 transition resize-none"></textarea>
                                     </div>
-                                    <button type="submit"
+                                    <button type="button"
+                                            @click="$dispatch('open-global-confirm', { formId: 'reject-form', message: 'Apakah Anda yakin ingin MENOLAK pengajuan refund ini? Reservasi dan pembayaran customer akan tetap aktif.' })"
                                             class="w-full mt-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.98] text-xs">
                                         Tolak Refund Customer
                                     </button>
@@ -291,9 +293,10 @@
                                 2. Setelah transfer sukses, klik tombol di bawah untuk menandai refund telah diselesaikan.
                             </div>
 
-                            <form action="{{ route('admin.refunds.complete', $refund) }}" method="POST" id="complete-form" onsubmit="return confirm('Konfirmasi bahwa Anda telah mentransfer dana sebesar {{ $refund->formatted_amount }} ke rekening customer?')">
+                            <form action="{{ route('admin.refunds.complete', $refund) }}" method="POST" id="complete-form">
                                 @csrf
-                                <button type="submit"
+                                <button type="button"
+                                        @click="$dispatch('open-global-confirm', { formId: 'complete-form', message: 'Konfirmasi bahwa Anda telah mentransfer dana sebesar {{ $refund->formatted_amount }} ke rekening customer?' })"
                                         class="w-full py-3 bg-gradient-to-r from-blue-600 to-pink-600 hover:from-blue-700 hover:to-pink-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-pink-500/20 active:scale-[0.98] text-xs">
                                     Tandai Transfer Selesai (Completed)
                                 </button>
