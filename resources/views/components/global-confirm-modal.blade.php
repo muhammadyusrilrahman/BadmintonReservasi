@@ -1,13 +1,9 @@
 <div x-data="{
     formId: null,
     message: '',
-    submitForm() {
-        if (this.formId) {
-            document.getElementById(this.formId).submit();
-        }
-    }
 }"
 @open-global-confirm.window="formId = $event.detail.formId; message = $event.detail.message; $dispatch('open-modal', 'global-confirm')"
+@confirm-submit.window="if (formId) { const form = document.getElementById(formId); if (form) form.submit(); }"
 >
     <x-modal name="global-confirm" maxWidth="sm">
         <div class="p-6">
@@ -24,10 +20,11 @@
                 <button type="button" x-on:click="$dispatch('close-modal', 'global-confirm')" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors">
                     Batal
                 </button>
-                <button type="button" x-on:click="submitForm()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors">
+                <button type="button" x-on:click="$dispatch('confirm-submit'); $dispatch('close-modal', 'global-confirm')" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors">
                     Ya, Lanjutkan
                 </button>
             </div>
         </div>
     </x-modal>
 </div>
+
